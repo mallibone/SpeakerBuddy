@@ -2,11 +2,12 @@ using MauiReactor;
 using MauiReactor.HotReload;
 using StageBuddy.App.Pages;
 using StageBuddy.App.Resources.Styles;
-using StageBuddy.App.Services;
 using StageBuddy.Core.Storage;
 using StageBuddy.Core.Sync;
+using StageBuddy.Sync.Multipeer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Hosting;
+using UIKit;
 
 namespace StageBuddy.App
 {
@@ -32,7 +33,13 @@ namespace StageBuddy.App
 
             builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddSingleton<ITalkRepository>(_ => new FileTalkRepository(FileSystem.AppDataDirectory));
-            builder.Services.AddSingleton<ISnippetSender, LocalClipboardSnippetSender>();
+            builder.Services.AddSingleton<IPairingTokenStore>(
+                _ => new NSUserDefaultsPairingTokenStore("StageBuddy.PairingToken"));
+            builder.Services.AddSingleton<ISnippetSender>(sp => new MultipeerSnippetSender(
+                UIDevice.CurrentDevice.Name,
+                sp.GetRequiredService<IPairingTokenStore>(),
+                action => MainThread.BeginInvokeOnMainThread(action),
+                sp.GetRequiredService<TimeProvider>()));
 
             return builder.Build();
         }

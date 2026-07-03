@@ -28,5 +28,12 @@
 	</array>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Stage Buddy connects to your Mac over the local network to send code snippets while you present.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_stagebuddy-sync._tcp</string>
+		<string>_stagebuddy-sync._udp</string>
+	</array>
 </dict>
 </plist>

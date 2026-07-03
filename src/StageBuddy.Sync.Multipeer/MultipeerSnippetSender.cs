@@ -11,18 +11,20 @@ public sealed class MultipeerSnippetSender : ISnippetSender, ISessionEventSink, 
 {
     private const int MaxPayloadBytes = 1024 * 1024;
 
+    private readonly IPairingTokenStore _tokenStore;
     private readonly Action<Action> _dispatchToUi;
     private readonly PairingStateMachine _stateMachine;
     private readonly MCPeerID _peerId;
     private readonly SessionDelegate _sessionDelegate;
     private readonly BrowserDelegate _browserDelegate;
     private readonly MCNearbyServiceBrowser _browser;
-    private readonly string _pairingToken;
 
     private MCSession _session;
+    private string _pairingToken;
 
     public MultipeerSnippetSender(string displayName, IPairingTokenStore tokenStore, Action<Action> dispatchToUi, TimeProvider clock)
     {
+        _tokenStore = tokenStore;
         _dispatchToUi = dispatchToUi;
 
         _pairingToken = tokenStore.Load() ?? Guid.NewGuid().ToString("N");
@@ -57,6 +59,21 @@ public sealed class MultipeerSnippetSender : ISnippetSender, ISessionEventSink, 
     {
         _browser.StopBrowsingForPeers();
         _stateMachine.Stop();
+    }
+
+    /// <summary>
+    /// Forces a fresh pairing token so the Mac no longer recognizes this device and shows
+    /// its confirm dialog again on the next connection attempt.
+    /// </summary>
+    public void RePair()
+    {
+        StopPairing();
+
+        _tokenStore.Clear();
+        _pairingToken = Guid.NewGuid().ToString("N");
+        _tokenStore.Save(_pairingToken);
+
+        StartPairing();
     }
 
     public Task<SendResult> SendAsync(Snippet snippet, CancellationToken ct = default)
