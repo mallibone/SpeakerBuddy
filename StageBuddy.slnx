@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/StageBuddy.App/StageBuddy.App.csproj" />
+    <Project Path="src/StageBuddy.Core/StageBuddy.Core.csproj" />
+    <Project Path="src/StageBuddy.MacHelper/StageBuddy.MacHelper.csproj" />
+    <Project Path="src/StageBuddy.Sync.Multipeer/StageBuddy.Sync.Multipeer.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/StageBuddy.Core.Tests/StageBuddy.Core.Tests.csproj" />
+  </Folder>
+</Solution>
