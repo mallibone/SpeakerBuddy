@@ -39,11 +39,35 @@
 - M2.6 iOS app wiring. `MauiProgram` swaps `ISnippetSender → MultipeerSnippetSender` (displayName = `UIDevice.CurrentDevice.Name`, matches spec §5's "Mac shows confirm dialog with the phone's name"). `AppShell.OnMounted` calls `Sender.StartPairing()` once at launch — nothing else was calling it, and spec says pairing should be "near-instant on app launch." `SettingsPage` now binds to `ISnippetSender.State`/`StateChanged` and has a working Re-pair button (added `MultipeerSnippetSender.RePair()`: stop → clear+regenerate the pairing token → start, so the Mac stops recognizing this device and shows its confirm dialog again next connection, per the M2 device checklist's item 10). Added iOS `Info.plist` `NSLocalNetworkUsageDescription` + `NSBonjourServices` entries mirroring MacHelper's.
   **Verified live on the iOS simulator** (not just compiled): relaunched after the DI swap — no crash, library screen renders as before, confirming `MultipeerSnippetSender`'s constructor (including the `MCNearbyServiceBrowser`/`MCSession` construction) succeeds at runtime even without real Multipeer connectivity available. Then used the AppShell-repoint diagnostic once more to confirm `SettingsPage` itself: screenshot shows "Mac Pairing / Looking for your Mac… / Re-pair" — i.e. `State` correctly reflects `Discovering` (set by `AppShell`'s launch-time `StartPairing()` call) live through the `StateChanged` subscription. Reverted the diagnostic afterward (verified via `git diff` that only the intended `OnMounted`/`StartPairing` addition remains in `AppShell.cs`).
 
+- M2.7 compile-only gate — final verification pass, all green:
+  - `dotnet build StageBuddy.slnx` — 0 warnings, 0 errors (both app heads + Core + Sync.Multipeer, all TFMs).
+  - `dotnet test tests/StageBuddy.Core.Tests` — 91/91 passing.
+  - `dotnet build src/StageBuddy.App -f net10.0-ios` — 0 warnings, 0 errors.
+  - `dotnet build src/StageBuddy.MacHelper -f net10.0-maccatalyst` — 0 warnings, 0 errors.
+  - Both heads additionally verified *live* during M2.5/M2.6 (not just compiled): MacHelper actually launched and ran on this Mac (native Catalyst, no simulator needed) showing "Waiting for Stage Buddy…"; the iOS app relaunched cleanly on the simulator after every DI change, proving `MultipeerSnippetSender`/`MultipeerSnippetReceiver` construction succeeds at runtime (including the `identity: null!` `MCSession` workaround) even though no actual peer-to-peer connection can form without AWDL/real hardware.
+
+**M2 is at plan.md's own stated STOP point.** All buildable/testable work for this milestone is done — everything from here is real Multipeer behavior (pairing dialogs, reconnection timing under real network conditions, App Nap, backgrounding) that literally cannot be observed on a simulator (no AWDL). Per plan.md §5, M2 is done when the **manual two-device checklist** passes on your physical iPhone + Mac:
+
+1. First launch both apps → local-network permission prompts appear with our usage strings (iOS and macOS 15+); denying on iOS surfaces a Settings hint; re-allowing recovers without reinstall.
+2. First pairing: Mac shows confirm dialog with the phone's name; Accept → phone chip goes Discovering → Connecting → Connected in < ~5 s; Decline → returns to Discovering, no crash.
+3. Known-peer reconnect: kill + relaunch phone app → auto-reconnects with **no** Mac dialog in < ~5 s.
+4. Copy path: Copy on phone → ⌘V in a real Mac editor pastes the exact snippet (multi-line, tabs, non-ASCII).
+5. Rapid fire: 5 fast consecutive Copies → pasteboard holds the last one, none dropped (`.Reliable`).
+6. Helper hidden behind a full-screen IDE 10+ min → Copy still pastes (App Nap token works).
+7. Phone backgrounded 30 s → returns → auto-reconnect; KeepScreenOn prevents lock during Live View (already verified in M1 — this just re-confirms it survives backgrounding).
+8. Mac sleep/wake → reconnects without restarting either app.
+9. Both devices Wi-Fi ON but joined to no network → still works (AWDL). Phone Wi-Fi OFF → drops, UI shows disconnected state.
+10. Re-pair in Settings → next connect shows the Mac confirm dialog again.
+
+Device deploy: iPhone needs Developer Mode on; `dotnet build src/StageBuddy.App -t:Run -f net10.0-ios -p:RuntimeIdentifier=ios-arm64 -p:CodesignKey="Apple Development"` (Xcode can create an automatic dev provisioning profile for `com.mallibone.stagebuddy` on first run). Mac helper: `dotnet build src/StageBuddy.MacHelper -f net10.0-maccatalyst -t:Run` (already proven to launch correctly on this machine).
+
+If anything on the checklist fails in a way that looks like MultipeerConnectivity itself misbehaving (not an obvious plist/entitlement typo) — delegates rooted in fields, peer ID archived, encryption `.Required`, plist keys and entitlements all already in place — that's exactly the plan.md §7 case for escalating to a Fable subagent with just the sender/receiver/delegate files + observed symptoms, rather than guessing further blind.
+
 ## In progress
 - (none)
 
 ## Next
-- M2.7 — compile-only gate (re-verify `dotnet build StageBuddy.slnx` + both per-TFM builds + `dotnet test`, one final time) and then **STOP**: hand off to the user for plan.md §5's manual two-device checklist (physical iPhone + Mac, MultipeerConnectivity does not work on simulators — no AWDL). Nothing left to build blind; the remaining M2 risk is entirely in real-world Multipeer behavior (pairing dialogs, reconnection timing, App Nap, backgrounding) that can only be observed on actual hardware.
+- **Waiting on the user** to run the M2 device checklist above. Once it passes (or reports specific failures), resume with M3 — Resilience & polish (placeholders, fallback notes, rehearsal mode, QR fallback, post-talk log).
 
 ## Blockers / decisions needed
 - (none)
