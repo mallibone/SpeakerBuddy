@@ -1,5 +1,6 @@
 using MauiReactor;
 using MauiReactor.HotReload;
+using Microsoft.Maui.DevFlow.Agent;
 using StageBuddy.MacHelper.Pages;
 using StageBuddy.MacHelper.Resources.Styles;
 using StageBuddy.Core.Sync;
@@ -28,6 +29,10 @@ namespace StageBuddy.MacHelper
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
+
+#if DEBUG
+            builder.AddMauiDevFlowAgent();
+#endif
 
             builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddSingleton<IPairingTokenStore>(
