@@ -1,6 +1,7 @@
 using StageBuddy.App.Components;
 using StageBuddy.Core.Live;
 using StageBuddy.Core.Models;
+using StageBuddy.Core.Placeholders;
 using StageBuddy.Core.Storage;
 using StageBuddy.Core.Sync;
 
@@ -21,6 +22,10 @@ class LiveTalkPageState
     public bool HasStarted { get; set; }
     public bool CopyFailed { get; set; }
     public bool HasNavigatedToSummary { get; set; }
+    public IReadOnlyList<string> PlaceholderNames { get; set; } = [];
+    public IReadOnlyDictionary<string, string> PlaceholderDefaults { get; set; } = new Dictionary<string, string>();
+    public IReadOnlyDictionary<string, string>? PlaceholderValues { get; set; }
+    public bool ShowPlaceholderSheet { get; set; }
 }
 
 class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
@@ -60,6 +65,7 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
         }
 
         var engine = new LiveTalkEngine(talk, Clock);
+        var (placeholderNames, placeholderDefaults) = DetectPlaceholders(talk);
 
         SetState(s =>
         {
@@ -68,12 +74,43 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
             s.Talk = talk;
             s.Engine = engine;
             s.Snapshot = engine.GetSnapshot();
+            s.PlaceholderNames = placeholderNames;
+            s.PlaceholderDefaults = placeholderDefaults;
+            s.PlaceholderValues = placeholderNames.Count == 0 ? new Dictionary<string, string>() : null;
         });
 
         _timer = Application.Current!.Dispatcher.CreateTimer();
         _timer.Interval = TimeSpan.FromSeconds(1);
         _timer.Tick += (_, _) => ApplySnapshot(State.Engine?.GetSnapshot());
         _timer.Start();
+    }
+
+    private (IReadOnlyList<string> Names, IReadOnlyDictionary<string, string> Defaults) DetectPlaceholders(TalkDocument talk)
+    {
+        var placeholderEngine = new PlaceholderEngine(Clock);
+        var seen = new HashSet<string>();
+        var names = new List<string>();
+
+        foreach (var beat in talk.Timeline.Where(b => b.Type == BeatType.Demo))
+        {
+            foreach (var step in beat.Steps ?? [])
+            {
+                if (step.Snippet is null)
+                    continue;
+
+                foreach (var name in placeholderEngine.DetectPlaceholders(step.Snippet))
+                {
+                    if (seen.Add(name))
+                        names.Add(name);
+                }
+            }
+        }
+
+        var defaults = new Dictionary<string, string>();
+        if (names.Contains("date"))
+            defaults["date"] = placeholderEngine.Substitute("{{date}}", new Dictionary<string, string>());
+
+        return (names, defaults);
     }
 
     private void ApplySnapshot(LiveTalkSnapshot? snapshot)
@@ -115,9 +152,17 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
         => ContentPage(
             State.IsLoading || State.Snapshot is null
                 ? ActivityIndicator().IsRunning(true).VCenter().HCenter()
-                : RenderLive()
+                : State.ShowPlaceholderSheet
+                    ? RenderPlaceholderSheet()
+                    : RenderLive()
         )
         .Title(State.Title);
+
+    private VisualNode RenderPlaceholderSheet()
+        => new PlaceholderSheet()
+            .Names(State.PlaceholderNames)
+            .Defaults(State.PlaceholderDefaults)
+            .OnSubmit(OnPlaceholderValuesSubmitted);
 
     private VisualNode RenderLive()
         => VStack(
@@ -188,15 +233,40 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
         });
     }
 
-    private async void CopyCurrentStep()
+    private void CopyCurrentStep()
+    {
+        if (State.PlaceholderValues is null)
+        {
+            SetState(s => s.ShowPlaceholderSheet = true);
+            return;
+        }
+
+        _ = SendCurrentStepAsync(State.PlaceholderValues);
+    }
+
+    private async void OnPlaceholderValuesSubmitted(IReadOnlyDictionary<string, string> values)
+    {
+        SetState(s =>
+        {
+            s.PlaceholderValues = values;
+            s.ShowPlaceholderSheet = false;
+        });
+
+        await SendCurrentStepAsync(values);
+    }
+
+    private async Task SendCurrentStepAsync(IReadOnlyDictionary<string, string> placeholderValues)
     {
         var engine = State.Engine;
         var snapshot = State.Snapshot;
         if (engine is null || snapshot?.CurrentStep is null)
             return;
 
+        var placeholderEngine = new PlaceholderEngine(Clock);
+        var resolvedText = placeholderEngine.Substitute(snapshot.CurrentStep.Snippet ?? string.Empty, placeholderValues);
+
         var snippet = new Snippet(
-            snapshot.CurrentStep.Snippet ?? string.Empty,
+            resolvedText,
             snapshot.CurrentStep.Language,
             State.Title,
             snapshot.CurrentStep.Id);
