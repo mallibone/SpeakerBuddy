@@ -2,12 +2,13 @@
 
 ## Done
 - M1.1 scaffold: git init (branch main), .gitignore, StageBuddy.slnx, Directory.Build.props, Directory.Packages.props (CPM), NuGet.Config, all 5 projects created + referenced correctly, full solution builds with 0 warnings/errors, iOS and MacCatalyst per-TFM builds verified.
+- M1.2 Core models (SessionInfo, Beat, BeatType, DemoStep, TalkDocument) + TalkJsonContext (source-generated STJ context) + TalkSerializationTests (8 tests, all green): spec sample round-trip, camelCase property mapping, talk/demo enum mapping, optional-field-absent behavior.
 
 ## In progress
 - (none)
 
 ## Next
-- M1.2 Core models + TalkJsonContext + TalkSerializationTests
+- M1.3 TalkValidator + TalkImporter + tests
 
 ## Blockers / decisions needed
 - (none)
@@ -18,3 +19,6 @@
 - Test project template defaults to net8.0 — retargeted to net10.0 per plan §2/§3.6.
 - `dotnet test` on the still-empty test project exits with code 8 ("zero tests ran") — expected, not a failure; first real tests land in M1.2.
 - App/MacHelper heads scaffolded via the `maui-reactor-startup` template (from an already-installed Reactor.Maui.TemplatePack), then trimmed: removed Android/Tizen/Windows/(cross) platform folders and TFMs, kept only net10.0-ios (App) / net10.0-maccatalyst (MacHelper), set bundle IDs `com.mallibone.stagebuddy` / `com.mallibone.stagebuddy.helper` per plan §2. Placeholder `HomePage.cs` ("Hello World" counter) left in place as the stub root component — AppShell/real pages land in M1.6-M1.8.
+- `TalkJsonContext` currently only registers `TalkDocument` (plan §3.2 shows the eventual state including `SyncEnvelope`/`TalkRunLog`, which don't exist as types yet — M2/M3 will add their `[JsonSerializable]` entries when those records land).
+- `JsonStringEnumConverter<BeatType>` alone serializes enum members using their C# name ("Talk"/"Demo"), not the source-gen `PropertyNamingPolicy` (that policy only governs property names, not enum converters). Added a tiny `BeatTypeJsonConverter : JsonStringEnumConverter<BeatType>(JsonNamingPolicy.CamelCase)` subclass instead, since a `Type[]` converter list can't pass constructor args inline.
+- Added `DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull` to `TalkJsonContext` — without it, re-serializing an object with absent optional fields (e.g. a talk beat's null `Steps`) writes explicit `null` properties that don't exist in hand-authored input JSON, breaking structural round-trip equality. Not explicitly called out in plan.md but required for the round-trip test it prescribes.
