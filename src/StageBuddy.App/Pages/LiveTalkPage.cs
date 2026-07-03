@@ -1,4 +1,8 @@
+using StageBuddy.App.Components;
+using StageBuddy.Core.Live;
+using StageBuddy.Core.Models;
 using StageBuddy.Core.Storage;
+using StageBuddy.Core.Sync;
 
 namespace StageBuddy.App.Pages;
 
@@ -9,38 +13,159 @@ class LiveTalkPageProps
 
 class LiveTalkPageState
 {
-    public string Title { get; set; } = string.Empty;
     public bool IsLoading { get; set; } = true;
+    public string Title { get; set; } = string.Empty;
+    public LiveTalkEngine? Engine { get; set; }
+    public LiveTalkSnapshot? Snapshot { get; set; }
+    public bool HasStarted { get; set; }
+    public bool CopyFailed { get; set; }
 }
 
 class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
 {
     private ITalkRepository Repository => Services.GetRequiredService<ITalkRepository>();
+    private TimeProvider Clock => Services.GetRequiredService<TimeProvider>();
+    private ISnippetSender Sender => Services.GetRequiredService<ISnippetSender>();
+
+    private IDispatcherTimer? _timer;
 
     protected override void OnMounted()
     {
         base.OnMounted();
+        DeviceDisplay.Current.KeepScreenOn = true;
         _ = LoadAsync();
+    }
+
+    protected override void OnWillUnmount()
+    {
+        _timer?.Stop();
+        DeviceDisplay.Current.KeepScreenOn = false;
+        base.OnWillUnmount();
     }
 
     private async Task LoadAsync()
     {
         var talk = await Repository.LoadAsync(Props.TalkId);
+        if (talk is null)
+        {
+            SetState(s =>
+            {
+                s.IsLoading = false;
+                s.Title = "Talk not found";
+            });
+            return;
+        }
+
+        var engine = new LiveTalkEngine(talk, Clock);
+
         SetState(s =>
         {
-            s.Title = talk?.Session.Title ?? "Talk not found";
             s.IsLoading = false;
+            s.Title = talk.Session.Title;
+            s.Engine = engine;
+            s.Snapshot = engine.GetSnapshot();
         });
+
+        _timer = Application.Current!.Dispatcher.CreateTimer();
+        _timer.Interval = TimeSpan.FromSeconds(1);
+        _timer.Tick += (_, _) => SetState(s => s.Snapshot = s.Engine?.GetSnapshot());
+        _timer.Start();
     }
 
     public override VisualNode Render()
         => ContentPage(
-            State.IsLoading
+            State.IsLoading || State.Snapshot is null
                 ? ActivityIndicator().IsRunning(true).VCenter().HCenter()
-                : Label(State.Title)
-                    .FontSize(20)
-                    .HCenter()
-                    .VCenter()
+                : RenderLive()
         )
-        .Title("Live");
+        .Title(State.Title);
+
+    private VisualNode RenderLive()
+        => VStack(
+            new PacingBar().Snapshot(State.Snapshot!),
+
+            State.Snapshot!.IsFinished
+                ? RenderFinished()
+                : RenderCurrentBeat(),
+
+            !State.HasStarted
+                ? Button("Start").OnClicked(StartTalk).HeightRequest(56)
+                : null,
+
+            Button("Back").OnClicked(GoBackAStep)
+        )
+        .Spacing(16)
+        .Padding(16);
+
+    private VisualNode RenderCurrentBeat()
+        => State.Snapshot!.CurrentBeat.Type == BeatType.Demo
+            ? new DemoStepView()
+                .Step(State.Snapshot.CurrentStep!)
+                .CopyFailed(State.CopyFailed)
+                .OnCopy(CopyCurrentStep)
+            : new TalkBeatView()
+                .Beat(State.Snapshot.CurrentBeat)
+                .OnNext(NextBeat);
+
+    private static VisualNode RenderFinished()
+        => Label("Talk finished!")
+            .FontSize(24)
+            .HCenter()
+            .VCenter();
+
+    private void StartTalk()
+    {
+        State.Engine?.Start();
+        SetState(s =>
+        {
+            s.HasStarted = true;
+            s.Snapshot = s.Engine?.GetSnapshot();
+        });
+    }
+
+    private void NextBeat()
+    {
+        State.Engine?.NextBeat();
+        SetState(s => s.Snapshot = s.Engine?.GetSnapshot());
+    }
+
+    private void GoBackAStep()
+    {
+        State.Engine?.Back();
+        SetState(s =>
+        {
+            s.Snapshot = s.Engine?.GetSnapshot();
+            s.CopyFailed = false;
+        });
+    }
+
+    private async void CopyCurrentStep()
+    {
+        var engine = State.Engine;
+        var snapshot = State.Snapshot;
+        if (engine is null || snapshot?.CurrentStep is null)
+            return;
+
+        var snippet = new Snippet(
+            snapshot.CurrentStep.Snippet ?? string.Empty,
+            snapshot.CurrentStep.Language,
+            State.Title,
+            snapshot.CurrentStep.Id);
+
+        var result = await Sender.SendAsync(snippet);
+
+        if (result == SendResult.Sent)
+        {
+            engine.AdvanceStep();
+            SetState(s =>
+            {
+                s.Snapshot = engine.GetSnapshot();
+                s.CopyFailed = false;
+            });
+        }
+        else
+        {
+            SetState(s => s.CopyFailed = true);
+        }
+    }
 }
