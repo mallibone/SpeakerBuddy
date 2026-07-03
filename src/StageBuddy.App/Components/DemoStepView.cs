@@ -2,7 +2,13 @@ using StageBuddy.Core.Models;
 
 namespace StageBuddy.App.Components;
 
-partial class DemoStepView : Component
+class DemoStepViewState
+{
+    public string? LastSeenStepId { get; set; }
+    public bool ShowFallback { get; set; }
+}
+
+partial class DemoStepView : Component<DemoStepViewState>
 {
     [Prop]
     DemoStep? _step;
@@ -12,6 +18,20 @@ partial class DemoStepView : Component
 
     [Prop]
     bool _copyFailed;
+
+    protected override void OnPropsChanged()
+    {
+        base.OnPropsChanged();
+
+        if (State.LastSeenStepId != _step?.Id)
+        {
+            SetState(s =>
+            {
+                s.LastSeenStepId = _step?.Id;
+                s.ShowFallback = false;
+            });
+        }
+    }
 
     public override VisualNode Render()
     {
@@ -37,8 +57,25 @@ partial class DemoStepView : Component
             _copyFailed
                 ? Label("Copy failed — try again")
                     .TextColor(Colors.Red)
+                : null,
+
+            _step.FallbackNote is not null
+                ? RenderFallbackDisclosure(_step.FallbackNote)
                 : null
         )
         .Spacing(12);
+    }
+
+    private VisualNode RenderFallbackDisclosure(string fallbackNote)
+    {
+        return VStack(
+            Button(State.ShowFallback ? "Hide fallback note" : "If the demo breaks…")
+                .OnClicked(() => SetState(s => s.ShowFallback = !s.ShowFallback)),
+
+            State.ShowFallback
+                ? Label(fallbackNote)
+                    .FontAttributes(FontAttributes.Italic)
+                : null
+        );
     }
 }
