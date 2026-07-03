@@ -3,6 +3,9 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
+# Claude Code local tooling state
+.claude/
+
 # dotenv files
 .env
 
