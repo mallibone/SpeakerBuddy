@@ -6,6 +6,7 @@ class DemoStepViewState
 {
     public string? LastSeenStepId { get; set; }
     public bool ShowFallback { get; set; }
+    public bool ShowQrManually { get; set; }
 }
 
 partial class DemoStepView : Component<DemoStepViewState>
@@ -19,6 +20,9 @@ partial class DemoStepView : Component<DemoStepViewState>
     [Prop]
     bool _copyFailed;
 
+    [Prop]
+    bool _isSenderConnected = true;
+
     protected override void OnPropsChanged()
     {
         base.OnPropsChanged();
@@ -29,6 +33,7 @@ partial class DemoStepView : Component<DemoStepViewState>
             {
                 s.LastSeenStepId = _step?.Id;
                 s.ShowFallback = false;
+                s.ShowQrManually = false;
             });
         }
     }
@@ -61,9 +66,26 @@ partial class DemoStepView : Component<DemoStepViewState>
 
             _step.FallbackNote is not null
                 ? RenderFallbackDisclosure(_step.FallbackNote)
+                : null,
+
+            RenderQrToggle(),
+
+            !_isSenderConnected || State.ShowQrManually
+                ? new QrFallbackView().SnippetText(_step.Snippet)
                 : null
         )
         .Spacing(12);
+    }
+
+    private VisualNode? RenderQrToggle()
+    {
+        if (_isSenderConnected)
+        {
+            return Button(State.ShowQrManually ? "Hide QR code" : "Show QR code")
+                .OnClicked(() => SetState(s => s.ShowQrManually = !s.ShowQrManually));
+        }
+
+        return null;
     }
 
     private VisualNode RenderFallbackDisclosure(string fallbackNote)

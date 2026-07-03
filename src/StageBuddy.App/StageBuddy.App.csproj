@@ -44,6 +44,7 @@
 		<PackageReference Include="Microsoft.Maui.Controls" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" />
 		<PackageReference Include="Reactor.Maui" />
+		<PackageReference Include="QRCoder" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Configuration)'=='Debug'">

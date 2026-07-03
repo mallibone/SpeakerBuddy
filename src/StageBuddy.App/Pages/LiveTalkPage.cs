@@ -150,6 +150,7 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
             ? new DemoStepView()
                 .Step(State.Snapshot.CurrentStep!)
                 .CopyFailed(State.CopyFailed)
+                .IsSenderConnected(Sender.State == ConnectionState.Connected)
                 .OnCopy(CopyCurrentStep)
             : new TalkBeatView()
                 .Beat(State.Snapshot.CurrentBeat)
