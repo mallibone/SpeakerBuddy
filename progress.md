@@ -3,12 +3,14 @@
 ## Done
 - M1.1 scaffold: git init (branch main), .gitignore, StageBuddy.slnx, Directory.Build.props, Directory.Packages.props (CPM), NuGet.Config, all 5 projects created + referenced correctly, full solution builds with 0 warnings/errors, iOS and MacCatalyst per-TFM builds verified.
 - M1.2 Core models (SessionInfo, Beat, BeatType, DemoStep, TalkDocument) + TalkJsonContext (source-generated STJ context) + TalkSerializationTests (8 tests, all green): spec sample round-trip, camelCase property mapping, talk/demo enum mapping, optional-field-absent behavior.
+- M1.3 TalkValidator (+ ValidationResult/ValidationError) + TalkImporter (+ ImportResult) + tests, 22 new tests (15 validator, 7 importer), all green.
+- M1.4 FileTalkRepository + TalkSummary + ITalkRepository + tests, 7 new tests, all green. Done ahead of its listed order because TalkImporter (task 3) needs ITalkRepository to compile/persist — implemented Storage first, then Import, in that order; both are captured together in one commit.
 
 ## In progress
 - (none)
 
 ## Next
-- M1.3 TalkValidator + TalkImporter + tests
+- M1.5 LiveTalkEngine + PaceCalculator + tests
 
 ## Blockers / decisions needed
 - (none)
@@ -22,3 +24,6 @@
 - `TalkJsonContext` currently only registers `TalkDocument` (plan §3.2 shows the eventual state including `SyncEnvelope`/`TalkRunLog`, which don't exist as types yet — M2/M3 will add their `[JsonSerializable]` entries when those records land).
 - `JsonStringEnumConverter<BeatType>` alone serializes enum members using their C# name ("Talk"/"Demo"), not the source-gen `PropertyNamingPolicy` (that policy only governs property names, not enum converters). Added a tiny `BeatTypeJsonConverter : JsonStringEnumConverter<BeatType>(JsonNamingPolicy.CamelCase)` subclass instead, since a `Type[]` converter list can't pass constructor args inline.
 - Added `DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull` to `TalkJsonContext` — without it, re-serializing an object with absent optional fields (e.g. a talk beat's null `Steps`) writes explicit `null` properties that don't exist in hand-authored input JSON, breaking structural round-trip equality. Not explicitly called out in plan.md but required for the round-trip test it prescribes.
+- `TalkImporter.ImportFromJson` → implemented as `ImportFromJsonAsync(string json, CancellationToken ct = default)`. Plan's signature omits Async/CancellationToken, but the method awaits `ITalkRepository.SaveAsync`, so it must be a `Task`-returning method; named per C# async convention and threaded a `CancellationToken` through for consistency with the repository interface.
+- `TalkId` derivation (slug + 8-char content hash) hashes the raw input JSON string (SHA-256, first 8 hex chars), not a canonicalized/re-serialized form — "same content" is interpreted literally (same pasted bytes re-imports to the same id); a reformatted-but-semantically-identical JSON paste would get a new id. Not spelled out in plan.md; flagging in case that's not the intended semantics.
+- xUnit v3 analyzer (`xUnit1051`) requires every test that calls an async method with a `CancellationToken` parameter to pass `TestContext.Current.CancellationToken` (enforced as an error via `TreatWarningsAsErrors`). Adopted a `private CancellationToken Ct => TestContext.Current.CancellationToken;` convenience property in test classes that touch `ITalkRepository`/`TalkImporter` — keep using this pattern in later test classes that call cancellable Core APIs.
