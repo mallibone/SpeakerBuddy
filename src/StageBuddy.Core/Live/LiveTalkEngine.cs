@@ -15,6 +15,8 @@ public sealed class LiveTalkEngine(TalkDocument talk, TimeProvider clock)
 
     private TimeSpan TotalPlanned => TimeSpan.FromMinutes(talk.Timeline.Sum(b => b.PlannedDurationMinutes));
 
+    public DateTimeOffset? StartedAt => _started ? _startedAt : null;
+
     public void Start()
     {
         if (_started)

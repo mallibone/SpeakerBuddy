@@ -33,6 +33,7 @@ namespace StageBuddy.App
 
             builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddSingleton<ITalkRepository>(_ => new FileTalkRepository(FileSystem.AppDataDirectory));
+            builder.Services.AddSingleton<ITalkRunLogRepository>(_ => new FileTalkRunLogRepository(FileSystem.AppDataDirectory));
             builder.Services.AddSingleton<IPairingTokenStore>(
                 _ => new NSUserDefaultsPairingTokenStore("StageBuddy.PairingToken"));
             builder.Services.AddSingleton<ISnippetSender>(sp => new MultipeerSnippetSender(

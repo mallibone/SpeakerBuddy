@@ -6,12 +6,14 @@ namespace StageBuddy.App.Pages;
 class TalkLibraryPageState
 {
     public IReadOnlyList<TalkSummary> Talks { get; set; } = [];
+    public IReadOnlyDictionary<string, TalkRunLog> LastRuns { get; set; } = new Dictionary<string, TalkRunLog>();
     public bool IsLoading { get; set; } = true;
 }
 
 class TalkLibraryPage : Component<TalkLibraryPageState>
 {
     private ITalkRepository Repository => Services.GetRequiredService<ITalkRepository>();
+    private ITalkRunLogRepository RunLogRepository => Services.GetRequiredService<ITalkRunLogRepository>();
 
     protected override void OnMounted()
     {
@@ -22,9 +24,19 @@ class TalkLibraryPage : Component<TalkLibraryPageState>
     private async Task ReloadAsync()
     {
         var talks = await Repository.ListAsync();
+
+        var lastRuns = new Dictionary<string, TalkRunLog>();
+        foreach (var talk in talks)
+        {
+            var lastRun = await RunLogRepository.GetLatestAsync(talk.TalkId);
+            if (lastRun is not null)
+                lastRuns[talk.TalkId] = lastRun;
+        }
+
         SetState(s =>
         {
             s.Talks = talks;
+            s.LastRuns = lastRuns;
             s.IsLoading = false;
         });
     }
@@ -76,10 +88,29 @@ class TalkLibraryPage : Component<TalkLibraryPageState>
                 .FontAttributes(FontAttributes.Bold),
             Label($"{talk.PlannedDurationMinutes} min · {talk.BeatCount} beats")
                 .FontSize(14)
-                .TextColor(Colors.Gray)
+                .TextColor(Colors.Gray),
+            RenderLastRunDelta(talk.TalkId)
         )
         .Padding(16, 12)
         .OnTapped(() => NavigateToLiveTalk(talk));
+
+    private VisualNode? RenderLastRunDelta(string talkId)
+    {
+        if (!State.LastRuns.TryGetValue(talkId, out var lastRun))
+            return null;
+
+        var delta = lastRun.TotalActual - lastRun.TotalPlanned;
+        var description = delta switch
+        {
+            { Ticks: 0 } => "on time",
+            { Ticks: > 0 } => $"+{delta:mm\\:ss} over",
+            _ => $"-{delta.Negate():mm\\:ss} under"
+        };
+
+        return Label($"Last run: {description}")
+            .FontSize(12)
+            .TextColor(delta > TimeSpan.Zero ? Colors.Red : Colors.Green);
+    }
 
     private async void NavigateToImport()
     {

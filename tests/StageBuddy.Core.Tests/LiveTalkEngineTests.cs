@@ -54,6 +54,28 @@ public class LiveTalkEngineTests
     }
 
     [Fact]
+    public void StartedAt_IsNull_BeforeStart()
+    {
+        var (engine, _) = CreateEngine();
+
+        Assert.Null(engine.StartedAt);
+    }
+
+    [Fact]
+    public void StartedAt_ReflectsClockAtStart_AndDoesNotChangeOnRestart()
+    {
+        var (engine, clock) = CreateEngine();
+
+        engine.Start();
+        var startedAt = engine.StartedAt;
+        clock.Advance(TimeSpan.FromMinutes(2));
+        engine.Start();
+
+        Assert.Equal(clock.GetUtcNow() - TimeSpan.FromMinutes(2), startedAt);
+        Assert.Equal(startedAt, engine.StartedAt);
+    }
+
+    [Fact]
     public void Start_CalledTwice_IsNoOp()
     {
         var (engine, clock) = CreateEngine();

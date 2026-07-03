@@ -15,10 +15,12 @@ class LiveTalkPageState
 {
     public bool IsLoading { get; set; } = true;
     public string Title { get; set; } = string.Empty;
+    public TalkDocument? Talk { get; set; }
     public LiveTalkEngine? Engine { get; set; }
     public LiveTalkSnapshot? Snapshot { get; set; }
     public bool HasStarted { get; set; }
     public bool CopyFailed { get; set; }
+    public bool HasNavigatedToSummary { get; set; }
 }
 
 class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
@@ -62,14 +64,50 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
         {
             s.IsLoading = false;
             s.Title = talk.Session.Title;
+            s.Talk = talk;
             s.Engine = engine;
             s.Snapshot = engine.GetSnapshot();
         });
 
         _timer = Application.Current!.Dispatcher.CreateTimer();
         _timer.Interval = TimeSpan.FromSeconds(1);
-        _timer.Tick += (_, _) => SetState(s => s.Snapshot = s.Engine?.GetSnapshot());
+        _timer.Tick += (_, _) => ApplySnapshot(State.Engine?.GetSnapshot());
         _timer.Start();
+    }
+
+    private void ApplySnapshot(LiveTalkSnapshot? snapshot)
+    {
+        var shouldNavigateToSummary = !State.HasNavigatedToSummary && snapshot is { IsFinished: true };
+
+        SetState(s =>
+        {
+            s.Snapshot = snapshot;
+            if (shouldNavigateToSummary)
+                s.HasNavigatedToSummary = true;
+        });
+
+        if (shouldNavigateToSummary)
+        {
+            _timer?.Stop();
+            _ = NavigateToSummaryAsync(snapshot!);
+        }
+    }
+
+    private async Task NavigateToSummaryAsync(LiveTalkSnapshot snapshot)
+    {
+        var engine = State.Engine;
+        var talk = State.Talk;
+        if (engine is null || talk is null)
+            return;
+
+        await Navigation!.PushAsync<PostTalkSummaryPage, PostTalkSummaryPageProps>(props =>
+        {
+            props.TalkId = Props.TalkId;
+            props.TalkTitle = State.Title;
+            props.StartedAt = engine.StartedAt ?? Clock.GetUtcNow();
+            props.Timeline = talk.Timeline;
+            props.BeatTimings = snapshot.CompletedBeatTimings;
+        });
     }
 
     public override VisualNode Render()
@@ -126,7 +164,7 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
     private void NextBeat()
     {
         State.Engine?.NextBeat();
-        SetState(s => s.Snapshot = s.Engine?.GetSnapshot());
+        ApplySnapshot(State.Engine?.GetSnapshot());
     }
 
     private void GoBackAStep()
@@ -157,11 +195,8 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
         if (result == SendResult.Sent)
         {
             engine.AdvanceStep();
-            SetState(s =>
-            {
-                s.Snapshot = engine.GetSnapshot();
-                s.CopyFailed = false;
-            });
+            SetState(s => s.CopyFailed = false);
+            ApplySnapshot(engine.GetSnapshot());
         }
         else
         {
