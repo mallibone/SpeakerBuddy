@@ -6,16 +6,22 @@ namespace StageBuddy.App.Pages;
 class SettingsPageState
 {
     public ConnectionState PairingState { get; set; }
+    public bool IsRehearsalMode { get; set; }
 }
 
 class SettingsPage : Component<SettingsPageState>
 {
     private ISnippetSender Sender => Services.GetRequiredService<ISnippetSender>();
+    private IRehearsalModeToggle RehearsalMode => Services.GetRequiredService<IRehearsalModeToggle>();
 
     protected override void OnMounted()
     {
         base.OnMounted();
-        SetState(s => s.PairingState = Sender.State);
+        SetState(s =>
+        {
+            s.PairingState = Sender.State;
+            s.IsRehearsalMode = RehearsalMode.IsRehearsalMode;
+        });
         Sender.StateChanged += OnSenderStateChanged;
     }
 
@@ -38,7 +44,18 @@ class SettingsPage : Component<SettingsPageState>
                 Label(DescribeState(State.PairingState))
                     .TextColor(State.PairingState == ConnectionState.Connected ? Colors.Green : Colors.Gray),
 
-                Button("Re-pair").OnClicked(RePair)
+                Button("Re-pair").OnClicked(RePair),
+
+                Label("Rehearsal Mode")
+                    .FontSize(18)
+                    .FontAttributes(FontAttributes.Bold),
+
+                Label(State.IsRehearsalMode
+                    ? "On — Copy sends to this device's clipboard instead of the Mac"
+                    : "Off — Copy sends to the paired Mac")
+                    .TextColor(Colors.Gray),
+
+                Button(State.IsRehearsalMode ? "Turn Off" : "Turn On").OnClicked(ToggleRehearsalMode)
             )
             .Spacing(12)
             .Padding(16)
@@ -55,13 +72,21 @@ class SettingsPage : Component<SettingsPageState>
 
     private void RePair()
     {
-        if (Sender is MultipeerSnippetSender multipeerSender)
+        var underlyingSender = Sender is RehearsalAwareSnippetSender rehearsalAware ? rehearsalAware.LiveSender : Sender;
+
+        if (underlyingSender is MultipeerSnippetSender multipeerSender)
         {
             multipeerSender.RePair();
             return;
         }
 
-        Sender.StopPairing();
-        Sender.StartPairing();
+        underlyingSender.StopPairing();
+        underlyingSender.StartPairing();
+    }
+
+    private void ToggleRehearsalMode()
+    {
+        RehearsalMode.SetRehearsalMode(!State.IsRehearsalMode);
+        SetState(s => s.IsRehearsalMode = RehearsalMode.IsRehearsalMode);
     }
 }

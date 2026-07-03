@@ -28,6 +28,7 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
     private ITalkRepository Repository => Services.GetRequiredService<ITalkRepository>();
     private TimeProvider Clock => Services.GetRequiredService<TimeProvider>();
     private ISnippetSender Sender => Services.GetRequiredService<ISnippetSender>();
+    private IRehearsalModeToggle RehearsalMode => Services.GetRequiredService<IRehearsalModeToggle>();
 
     private IDispatcherTimer? _timer;
 
@@ -120,6 +121,15 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
 
     private VisualNode RenderLive()
         => VStack(
+            RehearsalMode.IsRehearsalMode
+                ? Label("REHEARSAL MODE")
+                    .FontAttributes(FontAttributes.Bold)
+                    .TextColor(Colors.White)
+                    .BackgroundColor(Colors.DarkOrange)
+                    .Padding(8, 4)
+                    .HCenter()
+                : null,
+
             new PacingBar().Snapshot(State.Snapshot!),
 
             State.Snapshot!.IsFinished
