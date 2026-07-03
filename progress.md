@@ -25,11 +25,13 @@
 
 **M1 is functionally complete per plan.md's stated Definition of Done**, with one explicit caveat: the ImportPage paste/validation-error-display UI path is only proven at the `TalkImporter`/`TalkValidator` level, not via an actual on-device paste. Recommend closing that gap with a two-minute manual pass (paste the spec §3 JSON, then a mangled version) before M2 work or a real rehearsal.
 
+- M2.1 SyncEnvelope + SnippetPayload (+ registered in `TalkJsonContext`) + PairingStateMachine + tests, 31 new tests (5 SyncEnvelopeTests + 26 PairingStateMachineTests), all green, 91 total. `PairingStateMachine` is clock-injected and platform-free per plan: `Start`/`Stop`/`PermissionDenied`/`PeerFound`/`PeerLost`/`SessionConnected`/`SessionDisconnected` drive `ConnectionState` (reused the existing enum rather than adding a new one). Backoff is timestamp-gated, not timer-owned: on a disconnect it computes 1/2/4/5/5…s from a `_consecutiveFailures` counter, records `_retryNotBefore = clock.GetUtcNow() + delay`, and `PeerFound()` is a no-op until that time passes — this is the "produces state transitions and 'retry after X' outputs" plan.md describes (`LastBackoffDelay` is the observable output), rather than the machine owning an `ITimer` itself. `PermissionDenied`/`Stop` both reset the backoff counter and land on `Disconnected`, which only `Start()` (guarded to no-op unless currently `Disconnected`) can leave — satisfying "PermissionDenied terminal until restarted" without a separate terminal state.
+
 ## In progress
 - (none)
 
 ## Next
-- Start M2 — MultipeerConnectivity sync (plan.md §4, M2 task 1: SyncEnvelope + PairingStateMachine in Core + tests). M2 requires a physical iPhone + Mac for its own Definition of Done (§5) — flag this as a user checkpoint before the M2.7 device-testing gate.
+- M2.2 MultipeerCommon (peer-ID archiving via NSKeyedArchiver/NSUserDefaults, MCSession factory with `.Required` encryption) in `StageBuddy.Sync.Multipeer`. This is the first platform-specific (iOS/MacCatalyst-only) code in the project — no Core tests apply; correctness here is compile-gate + eventual device checkpoint only. M2 overall requires a physical iPhone + Mac for its Definition of Done (§5) — will STOP at M2 task 7 (compile-only gate) and hand off to the user for the manual two-device checklist rather than attempting to fake device-only behavior (MultipeerConnectivity does not work on simulators — no AWDL).
 
 ## Blockers / decisions needed
 - (none)
