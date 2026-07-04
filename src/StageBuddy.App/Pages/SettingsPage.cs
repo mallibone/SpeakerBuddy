@@ -59,7 +59,11 @@ class SettingsPage : Component<SettingsPageState>
 
                 Button(State.IsRehearsalMode ? "Turn Off" : "Turn On")
                     .OnClicked(ToggleRehearsalMode)
-                    .AutomationId("SettingsRehearsalToggleButton")
+                    .AutomationId("SettingsRehearsalToggleButton"),
+
+                Button("Done")
+                    .OnClicked(Done)
+                    .AutomationId("SettingsDoneButton")
             )
             .Spacing(12)
             .Padding(16)
@@ -87,6 +91,8 @@ class SettingsPage : Component<SettingsPageState>
         underlyingSender.StopPairing();
         underlyingSender.StartPairing();
     }
+
+    private async void Done() => await Navigation!.PopAsync();
 
     private void ToggleRehearsalMode()
     {

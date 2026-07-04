@@ -1,0 +1,28 @@
+{
+  "session": {
+    "title": "Placeholder Rehearsal",
+    "plannedDurationMinutes": 5
+  },
+  "timeline": [
+    {
+      "id": "beat-1",
+      "type": "demo",
+      "title": "Placeholder demo",
+      "plannedDurationMinutes": 5,
+      "steps": [
+        {
+          "id": "step-1",
+          "note": "Connect to the demo host",
+          "snippet": "ssh {{host}} # provisioned {{date}}",
+          "language": "bash"
+        },
+        {
+          "id": "step-2",
+          "note": "Second step reuses cached values",
+          "snippet": "echo {{host}}",
+          "language": "bash"
+        }
+      ]
+    }
+  ]
+}

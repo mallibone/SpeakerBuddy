@@ -19,13 +19,15 @@ partial class QrFallbackView : Component
         return VStack(
             Label("Mac not connected — scan to copy")
                 .FontSize(14)
-                .TextColor(Colors.Gray),
+                .TextColor(Colors.Gray)
+                .AutomationId("QrFallbackCaption"),
 
             Image()
                 .Source(ImageSource.FromStream(() => new MemoryStream(bytes)))
                 .WidthRequest(220)
                 .HeightRequest(220)
                 .HCenter()
+                .AutomationId("QrFallbackImage")
         )
         .Spacing(8);
     }

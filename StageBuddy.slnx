@@ -6,6 +6,7 @@
     <Project Path="src/StageBuddy.Sync.Multipeer/StageBuddy.Sync.Multipeer.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/StageBuddy.App.EndToEndTests/StageBuddy.App.EndToEndTests.csproj" />
     <Project Path="tests/StageBuddy.Core.Tests/StageBuddy.Core.Tests.csproj" />
   </Folder>
 </Solution>

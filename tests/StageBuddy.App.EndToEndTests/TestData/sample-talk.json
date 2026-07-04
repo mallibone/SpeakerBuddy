@@ -1,0 +1,35 @@
+{
+  "session": {
+    "title": "Building MCP Servers in .NET",
+    "plannedDurationMinutes": 45
+  },
+  "timeline": [
+    {
+      "id": "beat-1",
+      "type": "talk",
+      "title": "Intro & motivation",
+      "plannedDurationMinutes": 5
+    },
+    {
+      "id": "beat-2",
+      "type": "demo",
+      "title": "First MCP server",
+      "plannedDurationMinutes": 8,
+      "steps": [
+        {
+          "id": "step-1",
+          "note": "Show the ModelContextProtocol NuGet package, empty console app",
+          "snippet": "dotnet add package ModelContextProtocol",
+          "language": "bash",
+          "fallbackNote": "If live setup breaks, show the pre-built project instead"
+        },
+        {
+          "id": "step-2",
+          "note": "Register the server + stdio transport",
+          "snippet": "builder.Services.AddMcpServer()\n    .WithStdioServerTransport();",
+          "language": "csharp"
+        }
+      ]
+    }
+  ]
+}

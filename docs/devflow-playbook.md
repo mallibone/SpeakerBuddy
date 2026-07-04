@@ -1,6 +1,20 @@
 # MAUI DevFlow Playbook (Stage Buddy)
 
-Working reference for driving the Mac Catalyst helper app (`StageBuddy.MacHelper`) via Microsoft's MAUI DevFlow CLI during debugging sessions. All commands below were run and verified on this machine (2026-07-03).
+Working reference for driving the Stage Buddy apps via Microsoft's MAUI DevFlow CLI during debugging sessions. All commands below were run and verified on this machine (2026-07-03; e2e suite added 2026-07-04). The agent is permanently wired (Debug-only) into **both** heads: `StageBuddy.MacHelper` and `StageBuddy.App`.
+
+## Automated simulator e2e suite
+
+`tests/StageBuddy.App.EndToEndTests` drives the real iOS app on the simulator through this CLI — import journeys, a full live talk run in rehearsal mode, the copy-failure/QR path, and the placeholder sheet. It is opt-in (skips without the env var) because it needs macOS + Xcode simulators + the `maui` CLI:
+
+```bash
+STAGEBUDDY_E2E=1 dotnet test tests/StageBuddy.App.EndToEndTests
+```
+
+The fixture builds the app, boots a simulator if none is running, quits a running Mac helper (its agent interferes — see gotchas), reinstalls the app per test for a clean data container, and seeds talk files straight into `{container}/Library/talks/` where useful. Tests address elements by `AutomationId` only, so UI label/style changes don't break them. CLI syntax notes learned the hard way:
+
+- `ui fill` needs **both positionals**: `maui devflow -p ios ui fill <elementId> <text>` — the element id equals the AutomationId when one is set. The `--automationId` option alone leaves the text argument unbound ("Required argument missing").
+- `ui query --automationId X --format compact` is the reliable existence check; `--wait-until exists` also works.
+- Never rely on the native nav-bar back chevron (unreachable); every test flow exits forward through in-app buttons (`SettingsDoneButton`, `SummaryDoneButton`, import auto-pop).
 
 ## One-time setup (per project)
 
@@ -88,6 +102,7 @@ Other top-level `maui devflow` commands: `agent`, `batch`, `broker`, `commands`,
 ## Limitations and gotchas
 
 - **No physical iOS devices.** The DevFlow Agent (tap/tree/screenshot) supports Mac Catalyst and iOS Simulator only — NOT real iPhones/iPads (per Microsoft's platform support table: https://learn.microsoft.com/en-us/dotnet/maui/developer-tools/devflow/?view=net-maui-10.0). It can automate the Mac side of a cross-device test; the real-iPad side still needs a human.
+- **A running Mac helper can block the simulator app's agent.** Both agents want host TCP port 9223 (simulators share the Mac's network stack). Observed: with the helper running, `maui devflow diagnose` stayed stuck at `agent_count: 1` (MacCatalyst only) and the iOS app never registered. Quit the helper (`osascript -e 'quit app "Stage Buddy Helper"'`) before simulator work — the e2e fixture does this automatically.
 - **Stray simulators pollute Multipeer/Bonjour discovery.** Simulators share the host Mac's network stack, so a booted simulator running an old app build appears as a real peer to the Mac helper (we saw a confusing "unknown peer" pairing dialog from a simulator left over from hours earlier). Before trusting any DevFlow-observed pairing/discovery state during physical-device testing:
   ```bash
   xcrun simctl list devices booted   # should list no devices
