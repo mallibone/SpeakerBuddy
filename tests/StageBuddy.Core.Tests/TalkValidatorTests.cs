@@ -218,4 +218,66 @@ public class TalkValidatorTests
         Assert.False(result.IsValid);
         Assert.True(result.Errors.Count >= 4);
     }
+
+    // Deserializing JSON that parses but has the wrong shape (e.g. { "mangled": true })
+    // produces nulls despite the records' non-nullable declarations. Found live by the
+    // simulator e2e suite: the import silently died on an NRE instead of showing errors.
+
+    [Fact]
+    public void NullSession_ProducesErrorInsteadOfThrowing()
+    {
+        var document = new TalkDocument(null!, [new Beat("beat-1", BeatType.Talk, "Intro", 5, null)]);
+
+        var result = TalkValidator.Validate(document);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Path == "session");
+    }
+
+    [Fact]
+    public void NullTimeline_ProducesErrorInsteadOfThrowing()
+    {
+        var document = new TalkDocument(new SessionInfo("A Talk", 13), null!);
+
+        var result = TalkValidator.Validate(document);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Path == "timeline");
+    }
+
+    [Fact]
+    public void NullSessionAndTimeline_BothReported()
+    {
+        var document = new TalkDocument(null!, null!);
+
+        var result = TalkValidator.Validate(document);
+
+        Assert.False(result.IsValid);
+        Assert.Equal(2, result.Errors.Count);
+    }
+
+    [Fact]
+    public void NullBeatInTimeline_ProducesErrorInsteadOfThrowing()
+    {
+        var document = ValidDocument() with { Timeline = [null!, new Beat("beat-1", BeatType.Talk, "Intro", 13, null)] };
+
+        var result = TalkValidator.Validate(document);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Path == "timeline[0]");
+    }
+
+    [Fact]
+    public void NullStepInDemoBeat_ProducesErrorInsteadOfThrowing()
+    {
+        var document = ValidDocument() with
+        {
+            Timeline = [new Beat("beat-1", BeatType.Demo, "Demo", 13, [null!])]
+        };
+
+        var result = TalkValidator.Validate(document);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Path == "timeline[0].steps[0]");
+    }
 }

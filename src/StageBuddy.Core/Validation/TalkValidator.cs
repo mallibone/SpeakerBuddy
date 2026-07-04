@@ -10,6 +10,17 @@ public static class TalkValidator
         var warnings = new List<string>();
         var seenIds = new HashSet<string>();
 
+        // The records declare Session/Timeline non-nullable, but deserializing JSON that merely
+        // *parses* (e.g. `{ "mangled": true }`) still produces nulls here — guard, don't throw.
+        if (document.Session is null || document.Timeline is null)
+        {
+            if (document.Session is null)
+                errors.Add(new ValidationError("session", "Missing required 'session' object."));
+            if (document.Timeline is null)
+                errors.Add(new ValidationError("timeline", "Missing required 'timeline' array."));
+            return new ValidationResult(false, errors, warnings);
+        }
+
         if (string.IsNullOrWhiteSpace(document.Session.Title))
             errors.Add(new ValidationError("session.title", "Session title must not be empty."));
 
@@ -20,9 +31,14 @@ public static class TalkValidator
             errors.Add(new ValidationError("timeline", "Timeline must contain at least one beat."));
 
         for (var beatIndex = 0; beatIndex < document.Timeline.Count; beatIndex++)
-            ValidateBeat(document.Timeline[beatIndex], $"timeline[{beatIndex}]", seenIds, errors);
+        {
+            if (document.Timeline[beatIndex] is null)
+                errors.Add(new ValidationError($"timeline[{beatIndex}]", "Beat must be an object."));
+            else
+                ValidateBeat(document.Timeline[beatIndex], $"timeline[{beatIndex}]", seenIds, errors);
+        }
 
-        var plannedTotal = document.Timeline.Sum(beat => beat.PlannedDurationMinutes);
+        var plannedTotal = document.Timeline.Where(beat => beat is not null).Sum(beat => beat.PlannedDurationMinutes);
         if (plannedTotal != document.Session.PlannedDurationMinutes)
         {
             warnings.Add(
@@ -51,7 +67,12 @@ public static class TalkValidator
                 }
 
                 for (var stepIndex = 0; stepIndex < beat.Steps.Count; stepIndex++)
-                    ValidateStep(beat.Steps[stepIndex], $"{beatPath}.steps[{stepIndex}]", seenIds, errors);
+                {
+                    if (beat.Steps[stepIndex] is null)
+                        errors.Add(new ValidationError($"{beatPath}.steps[{stepIndex}]", "Step must be an object."));
+                    else
+                        ValidateStep(beat.Steps[stepIndex], $"{beatPath}.steps[{stepIndex}]", seenIds, errors);
+                }
                 break;
         }
     }
