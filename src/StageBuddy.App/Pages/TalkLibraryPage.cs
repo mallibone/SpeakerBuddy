@@ -53,7 +53,10 @@ class TalkLibraryPage : Component<TalkLibraryPageState>
                         : RenderList()
             )
         )
-        .Title("Stage Buddy");
+        .Title("Stage Buddy")
+        // Reload whenever the page reappears: a pop back from a finished run (or an import)
+        // must pick up new run logs/talks — OnMounted alone leaves the list stale.
+        .OnAppearing(() => _ = ReloadAsync());
 
     private VisualNode RenderHeader()
         => HStack(
