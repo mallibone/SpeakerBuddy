@@ -1,6 +1,8 @@
 using MauiReactor;
 using MauiReactor.HotReload;
+#if DEBUG
 using Microsoft.Maui.DevFlow.Agent;
+#endif
 using StageBuddy.MacHelper.Pages;
 using StageBuddy.MacHelper.Resources.Styles;
 using StageBuddy.Core.Sync;
@@ -28,6 +30,7 @@ namespace StageBuddy.MacHelper
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                    fonts.AddFont("FluentSystemIcons-Filled.ttf", "FluentIcons");
                 });
 
 #if DEBUG
