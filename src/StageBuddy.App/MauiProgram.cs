@@ -8,6 +8,9 @@ using StageBuddy.Core.Sync;
 using StageBuddy.Sync.Multipeer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Hosting;
+#if DEBUG
+using Microsoft.Maui.DevFlow.Agent;
+#endif
 using UIKit;
 
 namespace StageBuddy.App
@@ -31,6 +34,10 @@ namespace StageBuddy.App
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
+
+#if DEBUG
+            builder.AddMauiDevFlowAgent();
+#endif
 
             builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddSingleton<ITalkRepository>(_ => new FileTalkRepository(FileSystem.AppDataDirectory));

@@ -49,6 +49,7 @@
 
 	<ItemGroup Condition="'$(Configuration)'=='Debug'">
 		<PackageReference Include="Reactor.Maui.HotReload" />
+		<PackageReference Include="Microsoft.Maui.DevFlow.Agent" />
 	</ItemGroup>
 
 	<ItemGroup>

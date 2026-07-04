@@ -57,8 +57,8 @@ class TalkLibraryPage : Component<TalkLibraryPageState>
 
     private VisualNode RenderHeader()
         => HStack(
-            Button("Import").OnClicked(NavigateToImport),
-            Button("Settings").OnClicked(NavigateToSettings)
+            Button("Import").OnClicked(NavigateToImport).AutomationId("LibraryImportButton"),
+            Button("Settings").OnClicked(NavigateToSettings).AutomationId("LibrarySettingsButton")
         )
         .Spacing(12)
         .Padding(16, 8);
@@ -67,7 +67,8 @@ class TalkLibraryPage : Component<TalkLibraryPageState>
         => VStack(
             Label("No talks yet")
                 .FontSize(20)
-                .HCenter(),
+                .HCenter()
+                .AutomationId("LibraryEmptyState"),
             Label("Tap Import to paste a talk's JSON")
                 .TextColor(Colors.Gray)
                 .HCenter()
@@ -92,7 +93,8 @@ class TalkLibraryPage : Component<TalkLibraryPageState>
             RenderLastRunDelta(talk.TalkId)
         )
         .Padding(16, 12)
-        .OnTapped(() => NavigateToLiveTalk(talk));
+        .OnTapped(() => NavigateToLiveTalk(talk))
+        .AutomationId($"TalkRow-{talk.TalkId}");
 
     private VisualNode? RenderLastRunDelta(string talkId)
     {
@@ -109,7 +111,8 @@ class TalkLibraryPage : Component<TalkLibraryPageState>
 
         return Label($"Last run: {description}")
             .FontSize(12)
-            .TextColor(delta > TimeSpan.Zero ? Colors.Red : Colors.Green);
+            .TextColor(delta > TimeSpan.Zero ? Colors.Red : Colors.Green)
+            .AutomationId($"TalkLastRun-{talkId}");
     }
 
     private async void NavigateToImport()

@@ -173,6 +173,7 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
                     .BackgroundColor(Colors.DarkOrange)
                     .Padding(8, 4)
                     .HCenter()
+                    .AutomationId("RehearsalBadge")
                 : null,
 
             new PacingBar().Snapshot(State.Snapshot!),
@@ -182,10 +183,10 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
                 : RenderCurrentBeat(),
 
             !State.HasStarted
-                ? Button("Start").OnClicked(StartTalk).HeightRequest(56)
+                ? Button("Start").OnClicked(StartTalk).HeightRequest(56).AutomationId("LiveStartButton")
                 : null,
 
-            Button("Back").OnClicked(GoBackAStep)
+            Button("Back").OnClicked(GoBackAStep).AutomationId("LiveBackButton")
         )
         .Spacing(16)
         .Padding(16);
@@ -205,7 +206,8 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
         => Label("Talk finished!")
             .FontSize(24)
             .HCenter()
-            .VCenter();
+            .VCenter()
+            .AutomationId("LiveFinishedLabel");
 
     private void StartTalk()
     {

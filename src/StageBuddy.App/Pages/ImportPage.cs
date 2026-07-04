@@ -29,14 +29,17 @@ class ImportPage : Component<ImportPageState, ImportPageProps>
                         .Text(State.Json)
                         .OnTextChanged(text => SetState(s => s.Json = text))
                         .HeightRequest(280)
-                        .FontFamily("Courier"),
+                        .FontFamily("Courier")
+                        .AutomationId("ImportJsonEditor"),
 
                     Button("Paste from Clipboard")
-                        .OnClicked(PasteFromClipboard),
+                        .OnClicked(PasteFromClipboard)
+                        .AutomationId("ImportPasteButton"),
 
                     Button(State.IsImporting ? "Importing…" : "Import")
                         .OnClicked(Import)
-                        .IsEnabled(!State.IsImporting && !string.IsNullOrWhiteSpace(State.Json)),
+                        .IsEnabled(!State.IsImporting && !string.IsNullOrWhiteSpace(State.Json))
+                        .AutomationId("ImportSubmitButton"),
 
                     RenderMessages()
                 )
@@ -55,7 +58,7 @@ class ImportPage : Component<ImportPageState, ImportPageProps>
         nodes.AddRange(State.Errors.Select(e => (VisualNode)Label($"{e.Path}: {e.Message}").TextColor(Colors.Red)));
         nodes.AddRange(State.Warnings.Select(w => (VisualNode)Label(w).TextColor(Colors.Orange)));
 
-        return VStack(nodes.ToArray()).Spacing(4);
+        return VStack(nodes.ToArray()).Spacing(4).AutomationId("ImportMessages");
     }
 
     private async void PasteFromClipboard()

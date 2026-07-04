@@ -28,6 +28,7 @@ partial class TalkBeatView : Component
             Button("Next beat")
                 .OnClicked(() => _onNext?.Invoke())
                 .HeightRequest(64)
+                .AutomationId("NextBeatButton")
         )
         .Spacing(16)
         .VCenter();

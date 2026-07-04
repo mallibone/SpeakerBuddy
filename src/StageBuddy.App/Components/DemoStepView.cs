@@ -53,15 +53,18 @@ partial class DemoStepView : Component<DemoStepViewState>
                     .TextColor(Colors.White)
                     .BackgroundColor(Colors.Black)
                     .Padding(12)
+                    .AutomationId("DemoSnippetLabel")
                 : null,
 
             Button("Copy")
                 .OnClicked(() => _onCopy?.Invoke())
-                .HeightRequest(72),
+                .HeightRequest(72)
+                .AutomationId("DemoCopyButton"),
 
             _copyFailed
                 ? Label("Copy failed — try again")
                     .TextColor(Colors.Red)
+                    .AutomationId("DemoCopyFailedLabel")
                 : null,
 
             _step.FallbackNote is not null
@@ -82,7 +85,8 @@ partial class DemoStepView : Component<DemoStepViewState>
         if (_isSenderConnected)
         {
             return Button(State.ShowQrManually ? "Hide QR code" : "Show QR code")
-                .OnClicked(() => SetState(s => s.ShowQrManually = !s.ShowQrManually));
+                .OnClicked(() => SetState(s => s.ShowQrManually = !s.ShowQrManually))
+                .AutomationId("DemoQrToggleButton");
         }
 
         return null;
@@ -92,11 +96,13 @@ partial class DemoStepView : Component<DemoStepViewState>
     {
         return VStack(
             Button(State.ShowFallback ? "Hide fallback note" : "If the demo breaks…")
-                .OnClicked(() => SetState(s => s.ShowFallback = !s.ShowFallback)),
+                .OnClicked(() => SetState(s => s.ShowFallback = !s.ShowFallback))
+                .AutomationId("DemoFallbackToggleButton"),
 
             State.ShowFallback
                 ? Label(fallbackNote)
                     .FontAttributes(FontAttributes.Italic)
+                    .AutomationId("DemoFallbackNoteLabel")
                 : null
         );
     }

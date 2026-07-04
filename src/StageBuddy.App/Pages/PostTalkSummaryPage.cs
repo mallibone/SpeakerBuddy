@@ -47,7 +47,7 @@ class PostTalkSummaryPage : Component<PostTalkSummaryPageState, PostTalkSummaryP
                     .ItemsSource(Props.BeatTimings, RenderRow)
                     .VFill(),
 
-                Button("Done").OnClicked(Done)
+                Button("Done").OnClicked(Done).AutomationId("SummaryDoneButton")
             )
             .Spacing(12)
             .Padding(16)
@@ -59,7 +59,8 @@ class PostTalkSummaryPage : Component<PostTalkSummaryPageState, PostTalkSummaryP
         var delta = TotalActual - TotalPlanned;
         return Label($"{FormatTime(TotalActual)} actual vs {FormatTime(TotalPlanned)} planned ({FormatDelta(delta)})")
             .FontAttributes(FontAttributes.Bold)
-            .TextColor(delta > TimeSpan.Zero ? Colors.Red : Colors.Green);
+            .TextColor(delta > TimeSpan.Zero ? Colors.Red : Colors.Green)
+            .AutomationId("SummaryTotalDelta");
     }
 
     private VisualNode RenderRow(BeatTiming timing)

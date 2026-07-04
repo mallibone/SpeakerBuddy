@@ -35,7 +35,7 @@ partial class PlaceholderSheet : Component<PlaceholderSheetState>
             VStack(_names.Select(RenderEntry).ToArray())
                 .Spacing(12),
 
-            Button("Continue").OnClicked(Submit)
+            Button("Continue").OnClicked(Submit).AutomationId("PlaceholderContinueButton")
         )
         .Spacing(16)
         .Padding(16);
@@ -46,6 +46,7 @@ partial class PlaceholderSheet : Component<PlaceholderSheetState>
             Entry()
                 .Text(State.Values.GetValueOrDefault(name, string.Empty))
                 .OnTextChanged(text => SetState(s => s.Values[name] = text))
+                .AutomationId($"PlaceholderEntry-{name}")
         )
         .Spacing(4);
 

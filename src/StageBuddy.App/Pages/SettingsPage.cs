@@ -42,9 +42,10 @@ class SettingsPage : Component<SettingsPageState>
                     .FontAttributes(FontAttributes.Bold),
 
                 Label(DescribeState(State.PairingState))
-                    .TextColor(State.PairingState == ConnectionState.Connected ? Colors.Green : Colors.Gray),
+                    .TextColor(State.PairingState == ConnectionState.Connected ? Colors.Green : Colors.Gray)
+                    .AutomationId("SettingsPairingStateLabel"),
 
-                Button("Re-pair").OnClicked(RePair),
+                Button("Re-pair").OnClicked(RePair).AutomationId("SettingsRePairButton"),
 
                 Label("Rehearsal Mode")
                     .FontSize(18)
@@ -53,9 +54,12 @@ class SettingsPage : Component<SettingsPageState>
                 Label(State.IsRehearsalMode
                     ? "On — Copy sends to this device's clipboard instead of the Mac"
                     : "Off — Copy sends to the paired Mac")
-                    .TextColor(Colors.Gray),
+                    .TextColor(Colors.Gray)
+                    .AutomationId("SettingsRehearsalStateLabel"),
 
-                Button(State.IsRehearsalMode ? "Turn Off" : "Turn On").OnClicked(ToggleRehearsalMode)
+                Button(State.IsRehearsalMode ? "Turn Off" : "Turn On")
+                    .OnClicked(ToggleRehearsalMode)
+                    .AutomationId("SettingsRehearsalToggleButton")
             )
             .Spacing(12)
             .Padding(16)
