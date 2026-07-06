@@ -8,11 +8,25 @@
 - **Two real bugs found by the e2e suite, fixed with unit tests:** (1) `TalkValidator` NRE'd on JSON that parses but lacks `session`/`timeline` (or has null beats/steps) — a bad paste silently killed the import; now reported as validation errors (5 new tests). (2) `TalkLibraryPage` only reloaded on mount, so finishing a run never surfaced its "Last run" delta until app restart — now reloads `OnAppearing`.
 - **UI/UX overhaul (2026-07-04→06, user-requested; direction: "stage dark + amber")** — real app icons/splash (spotlight-over-timeline motif; amber for iOS, teal for the Mac helper), stage-dark theme in both heads with semantic tokens (`Accent`, `PaceOnTrack/PaceTolerance/PaceBehind`, `Card/CardBorder`, `Text*`, always-dark `Code*`), bundled Fluent UI System Icons font (MIT) + typed `Icons` glyph catalogue, and a full polish pass over every page/component (cards, glyph buttons, Grid-aligned pacing bar, beat-position overline, language-badged code card, white quiet-zone QR card, status dots, headline delta stat). Verified via simulator screenshots in dark AND light (fresh-launch) modes; **the e2e suite passes unchanged against the restyled UI** — the AutomationId investment doing exactly its job. `dotnet_bot.png` removed.
 
+## M2 device checklist — IN PROGRESS on real hardware (2026-07-06, iPad mini "Tardis" + Mac helper)
+Deploy to the physical iPad: build signed (`-p:RuntimeIdentifier=ios-arm64 -p:CodesignKey="Apple Development" -p:CodesignProvision="iOS Team Provisioning Profile: *"` — the default embedded ReyDemo profile lacked the iPad's UDID), then `xcrun devicectl device install app` + `... process launch`. **DevFlow cannot drive a physical iPad** (its in-app agent never registers with the Mac broker, and the device is on a USB tunnel with no reachable IP) — only the Mac Catalyst helper and the iOS *Simulator*. So: user does iPad taps; I verify the entire Mac side via DevFlow (port 10223) + `pbpaste`. Seed a talk onto the device with `xcrun devicectl device copy to --domain-type appDataContainer --domain-identifier com.mallibone.stagebuddy --source <dir-with-talks/> --destination Library/talks` (FileSystem.AppDataDirectory → Library/; talk id = filename).
+
+**Two real bugs found and fixed during this session (both committed):**
+- `fix(core): let the advertiser reach Connected without a Connecting step` — `PairingStateMachine.SessionConnected()` only accepted the transition from `Connecting`, which only the browser reaches (via `PeerFound`). The advertiser (Mac helper) goes `Discovering → Connected` directly, so the guard silently dropped it: the link was up but the helper showed "Waiting…" forever AND its App Nap token (gated on Connected) never armed. Now accepts Discovering-or-Connecting. Regression test added.
+- `fix(machelper): show the connected peer's name, not a hardcoded "iPhone"` — the status label read "Connected to iPhone" for any peer; now surfaces `MCPeerID.DisplayName` ("Connected to iPad"). This is what made it look like the wrong device was connected.
+
+**Checklist items status:**
+- Item 1 (local-network permission both sides): PASS — discovery works once granted.
+- Item 2 (pairing → Connected): PASS — reaches Connected/green after the state-machine fix. (Explicit first-time Accept-dialog for the iPad not cleanly isolated; auto-reconnect via stored token took over.)
+- Item 3 (known-peer reconnect, no dialog, fast): PASS — helper restarted 3× this session, iPad reconnected each time with no dialog.
+- Item 4 (Copy → exact snippet, multi-line/tabs): **PASS — verified byte-for-byte on the macOS pasteboard** (`builder.Services.AddMcpServer()\n\t.WithStdioServerTransport();`).
+- Items 5–10 (rapid-fire ×5, App Nap after 10min hidden, iPad backgrounding + KeepScreenOn, Mac sleep/wake, AWDL-no-network / Wi-Fi-off, Re-pair dialog): NOT YET RUN.
+
 ## In progress
-- (none)
+- M2 device checklist items 5–10 (see task #7).
 
 ## Next
-- **The user still needs to run the M2 device checklist** (plan.md §5, 10 items, physical iPhone + Mac). This remains the only gap before real-stage use. Note: item 2's first-pairing dialog was incidentally half-proven on 2026-07-06 — the booted simulator's sender discovered the Mac helper over local Multipeer and the helper showed the "Pair with 'iPhone 17 Pro'?" banner with the new UI (declined, helper quit afterwards).
+- Finish M2 checklist items 5–10 with the user (iPad taps + physical actions; I verify Mac-side).
 - Recommended (not blocking): one human camera-scan of the QR fallback (still never scanned with a real camera).
 
 ## Blockers / decisions needed
