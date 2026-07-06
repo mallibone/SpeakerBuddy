@@ -41,6 +41,10 @@ public sealed class MultipeerSnippetReceiver : ISnippetReceiver, ISessionEventSi
     }
 
     public ConnectionState State => _stateMachine.State;
+
+    /// <summary>Display name of the currently connected peer (the sender's device name), or null.</summary>
+    public string? ConnectedPeerName { get; private set; }
+
     public event EventHandler<ConnectionState>? StateChanged;
     public event EventHandler<Snippet>? SnippetReceived;
     public event EventHandler<PairingRequest>? UnknownPeerPairingRequested;
@@ -98,9 +102,11 @@ public sealed class MultipeerSnippetReceiver : ISnippetReceiver, ISessionEventSi
             switch (state)
             {
                 case MCSessionState.Connected:
+                    ConnectedPeerName = peer.DisplayName;
                     _stateMachine.SessionConnected();
                     break;
                 case MCSessionState.NotConnected:
+                    ConnectedPeerName = null;
                     _stateMachine.SessionDisconnected();
                     RecreateSession();
                     break;

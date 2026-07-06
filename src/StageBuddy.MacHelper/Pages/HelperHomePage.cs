@@ -8,6 +8,7 @@ namespace StageBuddy.MacHelper.Pages;
 class HelperHomePageState
 {
     public ConnectionState Connection { get; set; } = ConnectionState.Disconnected;
+    public string? ConnectedPeerName { get; set; }
     public string? LastSnippetPreview { get; set; }
     public DateTimeOffset? LastReceivedAt { get; set; }
     public PairingRequest? PendingPairingRequest { get; set; }
@@ -44,7 +45,12 @@ class HelperHomePage : Component<HelperHomePageState>
 
     private void OnConnectionStateChanged(object? sender, ConnectionState state)
     {
-        SetState(s => s.Connection = state);
+        var peerName = (Receiver as MultipeerSnippetReceiver)?.ConnectedPeerName;
+        SetState(s =>
+        {
+            s.Connection = state;
+            s.ConnectedPeerName = peerName;
+        });
 
         if (state == ConnectionState.Connected)
         {
@@ -98,7 +104,7 @@ class HelperHomePage : Component<HelperHomePageState>
                     : ApplicationTheme.TextSecondary)
                 .VCenter(),
             Label(State.Connection == ConnectionState.Connected
-                    ? "Connected to iPhone"
+                    ? $"Connected to {State.ConnectedPeerName ?? "device"}"
                     : "Waiting for Stage Buddy…")
                 .TextColor(State.Connection == ConnectionState.Connected
                     ? ApplicationTheme.TextPrimary
