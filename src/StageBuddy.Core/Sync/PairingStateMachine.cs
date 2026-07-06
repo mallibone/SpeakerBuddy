@@ -58,7 +58,11 @@ public sealed class PairingStateMachine(TimeProvider clock)
 
     public void SessionConnected()
     {
-        if (State != ConnectionState.Connecting)
+        // The browser reaches this via Discovering -> Connecting (PeerFound) -> Connected.
+        // The advertiser has no PeerFound step: it goes Discovering -> Connected directly when
+        // an inbound MCSession completes. Accept both so the receiver's UI and App Nap token
+        // actually engage — a session that reports Connected IS connected, regardless of role.
+        if (State is not (ConnectionState.Discovering or ConnectionState.Connecting))
             return;
 
         _consecutiveFailures = 0;

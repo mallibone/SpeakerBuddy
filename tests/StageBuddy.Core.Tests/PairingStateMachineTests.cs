@@ -100,11 +100,24 @@ public class PairingStateMachineTests
         Assert.Equal(ConnectionState.Connected, machine.State);
     }
 
+    [Fact]
+    public void SessionConnected_FromDiscovering_MovesToConnected()
+    {
+        // The advertiser (Mac helper) role skips PeerFound/Connecting: it goes
+        // Start (Discovering) -> SessionConnected directly when an inbound MCSession
+        // completes. Regression guard for the helper UI/App-Nap stuck-on-"Waiting" bug.
+        var (machine, _) = Create();
+        machine.Start();
+
+        machine.SessionConnected();
+
+        Assert.Equal(ConnectionState.Connected, machine.State);
+    }
+
     [Theory]
     [InlineData(ConnectionState.Disconnected)]
-    [InlineData(ConnectionState.Discovering)]
     [InlineData(ConnectionState.Connected)]
-    public void SessionConnected_WhenNotConnecting_IsNoOp(ConnectionState state)
+    public void SessionConnected_WhenNotActive_IsNoOp(ConnectionState state)
     {
         var (machine, _) = Create();
         MoveTo(machine, state);
