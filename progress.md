@@ -29,7 +29,7 @@ Deploy to the physical iPad: build signed (`-p:RuntimeIdentifier=ios-arm64 -p:Co
 
 ## Next
 - Recommended before a real on-stage use (not blocking): M2 items 6–10 re-run properly, plus one human camera-scan of the QR fallback (still never scanned with a real camera).
-- New: `.claude/skills/prep-talk/SKILL.md` — project skill that turns an outline into valid talk JSON (schema + validator rules + placeholder syntax encoded). Keep it in sync with `TalkValidator`/`PlaceholderEngine` if those change.
+- Talk-export skill lives at the USER level so it composes with the user's other talk-prep skills in any repo: `~/.claude/skills/stagebuddy-export/SKILL.md` (self-contained: schema, validator rules, `{{placeholder}}` syntax, paste-import + devicectl delivery). Not in this repo by design — single copy, no drift. Keep it in sync if `TalkValidator`/`PlaceholderEngine`/`TalkImporter` change.
 
 ## Blockers / decisions needed
 - (none)
