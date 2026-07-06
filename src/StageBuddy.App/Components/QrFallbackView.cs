@@ -14,22 +14,38 @@ partial class QrFallbackView : Component
 
         var bytes = TryGenerateQrPng(_snippetText);
         if (bytes is null)
-            return Label("Snippet too long to show as a QR code").TextColor(Colors.Orange);
+            return Label("Snippet too long to show as a QR code")
+                .TextColor(ApplicationTheme.PaceTolerance);
 
         return VStack(
-            Label("Mac not connected — scan to copy")
-                .FontSize(14)
-                .TextColor(Colors.Gray)
-                .AutomationId("QrFallbackCaption"),
+            HStack(
+                Label(Icons.Qr)
+                    .FontFamily(Icons.FontFamily)
+                    .FontSize(14)
+                    .TextColor(ApplicationTheme.TextSecondary)
+                    .VCenter(),
+                Label("Mac not connected — scan to copy")
+                    .FontSize(14)
+                    .TextColor(ApplicationTheme.TextSecondary)
+                    .VCenter()
+                    .AutomationId("QrFallbackCaption")
+            )
+            .Spacing(6)
+            .HCenter(),
 
-            Image()
-                .Source(ImageSource.FromStream(() => new MemoryStream(bytes)))
-                .WidthRequest(220)
-                .HeightRequest(220)
-                .HCenter()
-                .AutomationId("QrFallbackImage")
+            // White card behind the code keeps the quiet zone intact on the dark theme.
+            Border(
+                Image()
+                    .Source(ImageSource.FromStream(() => new MemoryStream(bytes)))
+                    .WidthRequest(220)
+                    .HeightRequest(220)
+                    .AutomationId("QrFallbackImage")
+            )
+            .BackgroundColor(Colors.White)
+            .Padding(10)
+            .HCenter()
         )
-        .Spacing(8);
+        .Spacing(10);
     }
 
     private static byte[]? TryGenerateQrPng(string text)

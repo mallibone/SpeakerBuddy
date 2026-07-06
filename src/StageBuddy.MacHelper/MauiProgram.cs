@@ -4,7 +4,6 @@ using MauiReactor.HotReload;
 using Microsoft.Maui.DevFlow.Agent;
 #endif
 using StageBuddy.MacHelper.Pages;
-using StageBuddy.MacHelper.Resources.Styles;
 using StageBuddy.Core.Sync;
 using StageBuddy.Sync.Multipeer;
 using Microsoft.Extensions.Logging;

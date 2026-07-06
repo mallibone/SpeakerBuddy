@@ -59,26 +59,41 @@ class TalkLibraryPage : Component<TalkLibraryPageState>
         .OnAppearing(() => _ = ReloadAsync());
 
     private VisualNode RenderHeader()
-        => HStack(
-            Button("Import").OnClicked(NavigateToImport).AutomationId("LibraryImportButton"),
-            Button("Settings").OnClicked(NavigateToSettings).AutomationId("LibrarySettingsButton")
+        => Grid("auto", "*,auto,auto",
+            Button("Import")
+                .OnClicked(NavigateToImport)
+                .ImageSource(Icons.Glyph(Icons.Import, ApplicationTheme.OnAccent, 18))
+                .AutomationId("LibraryImportButton")
+                .GridColumn(1),
+            Button("Settings")
+                .OnClicked(NavigateToSettings)
+                .ImageSource(Icons.Glyph(Icons.Settings, ApplicationTheme.Accent, 18))
+                .ThemeKey("Secondary")
+                .AutomationId("LibrarySettingsButton")
+                .GridColumn(2)
         )
-        .Spacing(12)
-        .Padding(16, 8);
+        .ColumnSpacing(10)
+        .Padding(16, 10);
 
     private static VisualNode RenderEmptyState()
         => VStack(
+            Label(Icons.Mic)
+                .FontFamily(Icons.FontFamily)
+                .FontSize(52)
+                .TextColor(ApplicationTheme.TextSecondary)
+                .HCenter(),
             Label("No talks yet")
                 .FontSize(20)
+                .FontFamily("OpenSansSemibold")
                 .HCenter()
                 .AutomationId("LibraryEmptyState"),
             Label("Tap Import to paste a talk's JSON")
-                .TextColor(Colors.Gray)
+                .TextColor(ApplicationTheme.TextSecondary)
                 .HCenter()
         )
         .VCenter()
         .VFill()
-        .Spacing(8);
+        .Spacing(10);
 
     private VisualNode RenderList()
         => CollectionView()
@@ -86,16 +101,31 @@ class TalkLibraryPage : Component<TalkLibraryPageState>
             .VFill();
 
     private VisualNode RenderTalkRow(TalkSummary talk)
-        => VStack(
-            Label(talk.Title)
-                .FontSize(18)
-                .FontAttributes(FontAttributes.Bold),
-            Label($"{talk.PlannedDurationMinutes} min · {talk.BeatCount} beats")
-                .FontSize(14)
-                .TextColor(Colors.Gray),
-            RenderLastRunDelta(talk.TalkId)
+        => Border(
+            Grid("auto", "*,auto",
+                VStack(
+                    Label(talk.Title)
+                        .FontSize(17)
+                        .FontFamily("OpenSansSemibold"),
+                    Label($"{talk.PlannedDurationMinutes} min · {talk.BeatCount} beats")
+                        .FontSize(13)
+                        .TextColor(ApplicationTheme.TextSecondary),
+                    RenderLastRunDelta(talk.TalkId)
+                )
+                .Spacing(4)
+                .GridColumn(0),
+
+                Label(Icons.Chevron)
+                    .FontFamily(Icons.FontFamily)
+                    .FontSize(18)
+                    .TextColor(ApplicationTheme.TextSecondary)
+                    .VCenter()
+                    .GridColumn(1)
+            )
         )
+        .BackgroundColor(ApplicationTheme.Card)
         .Padding(16, 12)
+        .Margin(16, 6)
         .OnTapped(() => NavigateToLiveTalk(talk))
         .AutomationId($"TalkRow-{talk.TalkId}");
 
@@ -112,10 +142,19 @@ class TalkLibraryPage : Component<TalkLibraryPageState>
             _ => $"-{delta.Negate():mm\\:ss} under"
         };
 
-        return Label($"Last run: {description}")
-            .FontSize(12)
-            .TextColor(delta > TimeSpan.Zero ? Colors.Red : Colors.Green)
-            .AutomationId($"TalkLastRun-{talkId}");
+        return HStack(
+            Label(Icons.History)
+                .FontFamily(Icons.FontFamily)
+                .FontSize(12)
+                .TextColor(delta > TimeSpan.Zero ? ApplicationTheme.PaceBehind : ApplicationTheme.PaceOnTrack)
+                .VCenter(),
+            Label($"Last run: {description}")
+                .FontSize(12)
+                .TextColor(delta > TimeSpan.Zero ? ApplicationTheme.PaceBehind : ApplicationTheme.PaceOnTrack)
+                .VCenter()
+                .AutomationId($"TalkLastRun-{talkId}")
+        )
+        .Spacing(4);
     }
 
     private async void NavigateToImport()

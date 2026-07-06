@@ -25,19 +25,33 @@ class ImportPage : Component<ImportPageState, ImportPageProps>
         => ContentPage(
             ScrollView(
                 VStack(
-                    Editor()
-                        .Text(State.Json)
-                        .OnTextChanged(text => SetState(s => s.Json = text))
-                        .HeightRequest(280)
-                        .FontFamily("Courier")
-                        .AutomationId("ImportJsonEditor"),
+                    Label("Paste the talk JSON exported from your notes.")
+                        .FontSize(14)
+                        .TextColor(ApplicationTheme.TextSecondary),
+
+                    Border(
+                        Editor()
+                            .Text(State.Json)
+                            .OnTextChanged(text => SetState(s => s.Json = text))
+                            .HeightRequest(280)
+                            .FontFamily("Courier")
+                            .FontSize(13)
+                            .TextColor(ApplicationTheme.CodeForeground)
+                            .AutomationId("ImportJsonEditor")
+                    )
+                    .BackgroundColor(ApplicationTheme.CodeBackground)
+                    .Padding(10, 6),
 
                     Button("Paste from Clipboard")
                         .OnClicked(PasteFromClipboard)
+                        .ImageSource(Icons.Glyph(Icons.Paste, ApplicationTheme.Accent, 18))
+                        .ThemeKey("Secondary")
                         .AutomationId("ImportPasteButton"),
 
                     Button(State.IsImporting ? "Importing…" : "Import")
                         .OnClicked(Import)
+                        .ImageSource(Icons.Glyph(Icons.Import, ApplicationTheme.OnAccent, 18))
+                        .HeightRequest(52)
                         .IsEnabled(!State.IsImporting && !string.IsNullOrWhiteSpace(State.Json))
                         .AutomationId("ImportSubmitButton"),
 
@@ -55,11 +69,22 @@ class ImportPage : Component<ImportPageState, ImportPageProps>
             return null;
 
         var nodes = new List<VisualNode>();
-        nodes.AddRange(State.Errors.Select(e => (VisualNode)Label($"{e.Path}: {e.Message}").TextColor(Colors.Red)));
-        nodes.AddRange(State.Warnings.Select(w => (VisualNode)Label(w).TextColor(Colors.Orange)));
+        nodes.AddRange(State.Errors.Select(e => RenderMessage($"{e.Path}: {e.Message}", ApplicationTheme.PaceBehind)));
+        nodes.AddRange(State.Warnings.Select(w => RenderMessage(w, ApplicationTheme.PaceTolerance)));
 
-        return VStack(nodes.ToArray()).Spacing(4).AutomationId("ImportMessages");
+        return VStack(nodes.ToArray()).Spacing(6).AutomationId("ImportMessages");
     }
+
+    private static VisualNode RenderMessage(string text, Color color)
+        => HStack(
+            Label(Icons.Warning)
+                .FontFamily(Icons.FontFamily)
+                .FontSize(14)
+                .TextColor(color),
+            Label(text)
+                .TextColor(color)
+        )
+        .Spacing(6);
 
     private async void PasteFromClipboard()
     {

@@ -17,20 +17,32 @@ partial class TalkBeatView : Component
 
         return VStack(
             Label(_beat.Title)
-                .FontSize(28)
-                .FontAttributes(FontAttributes.Bold)
+                .FontSize(30)
+                .FontFamily("OpenSansSemibold")
+                .HorizontalTextAlignment(TextAlignment.Center)
                 .HCenter(),
 
-            Label($"{_beat.PlannedDurationMinutes} min planned")
-                .TextColor(Colors.Gray)
-                .HCenter(),
+            HStack(
+                Label(Icons.Timer)
+                    .FontFamily(Icons.FontFamily)
+                    .FontSize(16)
+                    .TextColor(ApplicationTheme.TextSecondary)
+                    .VCenter(),
+                Label($"{_beat.PlannedDurationMinutes} min planned")
+                    .TextColor(ApplicationTheme.TextSecondary)
+                    .VCenter()
+            )
+            .Spacing(6)
+            .HCenter(),
 
             Button("Next beat")
                 .OnClicked(() => _onNext?.Invoke())
+                .ImageSource(Icons.Glyph(Icons.Next, ApplicationTheme.OnAccent))
+                .FontSize(18)
                 .HeightRequest(64)
                 .AutomationId("NextBeatButton")
         )
-        .Spacing(16)
+        .Spacing(20)
         .VCenter();
     }
 }

@@ -37,38 +37,81 @@ class SettingsPage : Component<SettingsPageState>
     public override VisualNode Render()
         => ContentPage(
             VStack(
+                RenderPairingSection(),
+                RenderRehearsalSection(),
+
+                Button("Done")
+                    .OnClicked(Done)
+                    .ImageSource(Icons.Glyph(Icons.Check, ApplicationTheme.OnAccent, 18))
+                    .HeightRequest(52)
+                    .AutomationId("SettingsDoneButton")
+            )
+            .Spacing(14)
+            .Padding(16)
+        )
+        .Title("Settings");
+
+    private VisualNode RenderPairingSection()
+        => Border(
+            VStack(
                 Label("Mac Pairing")
-                    .FontSize(18)
-                    .FontAttributes(FontAttributes.Bold),
+                    .FontSize(16)
+                    .FontFamily("OpenSansSemibold"),
 
-                Label(DescribeState(State.PairingState))
-                    .TextColor(State.PairingState == ConnectionState.Connected ? Colors.Green : Colors.Gray)
-                    .AutomationId("SettingsPairingStateLabel"),
+                HStack(
+                    BoxView()
+                        .WidthRequest(10)
+                        .HeightRequest(10)
+                        .CornerRadius(5)
+                        .BackgroundColor(StateDotColor(State.PairingState))
+                        .VCenter(),
+                    Label(DescribeState(State.PairingState))
+                        .TextColor(ApplicationTheme.TextSecondary)
+                        .VCenter()
+                        .AutomationId("SettingsPairingStateLabel")
+                )
+                .Spacing(8),
 
-                Button("Re-pair").OnClicked(RePair).AutomationId("SettingsRePairButton"),
+                Button("Re-pair")
+                    .OnClicked(RePair)
+                    .ThemeKey("Secondary")
+                    .AutomationId("SettingsRePairButton")
+            )
+            .Spacing(12)
+        )
+        .BackgroundColor(ApplicationTheme.Card)
+        .Padding(16);
 
+    private VisualNode RenderRehearsalSection()
+        => Border(
+            VStack(
                 Label("Rehearsal Mode")
-                    .FontSize(18)
-                    .FontAttributes(FontAttributes.Bold),
+                    .FontSize(16)
+                    .FontFamily("OpenSansSemibold"),
 
                 Label(State.IsRehearsalMode
                     ? "On — Copy sends to this device's clipboard instead of the Mac"
                     : "Off — Copy sends to the paired Mac")
-                    .TextColor(Colors.Gray)
+                    .TextColor(ApplicationTheme.TextSecondary)
                     .AutomationId("SettingsRehearsalStateLabel"),
 
                 Button(State.IsRehearsalMode ? "Turn Off" : "Turn On")
                     .OnClicked(ToggleRehearsalMode)
-                    .AutomationId("SettingsRehearsalToggleButton"),
-
-                Button("Done")
-                    .OnClicked(Done)
-                    .AutomationId("SettingsDoneButton")
+                    .ImageSource(Icons.Glyph(Icons.Presenter, ApplicationTheme.Accent, 18))
+                    .ThemeKey("Secondary")
+                    .AutomationId("SettingsRehearsalToggleButton")
             )
             .Spacing(12)
-            .Padding(16)
         )
-        .Title("Settings");
+        .BackgroundColor(ApplicationTheme.Card)
+        .Padding(16);
+
+    private static Color StateDotColor(ConnectionState state) => state switch
+    {
+        ConnectionState.Connected => ApplicationTheme.PaceOnTrack,
+        ConnectionState.Connecting or ConnectionState.Discovering => ApplicationTheme.PaceTolerance,
+        _ => ApplicationTheme.TextSecondary
+    };
 
     private static string DescribeState(ConnectionState state) => state switch
     {
@@ -77,6 +120,8 @@ class SettingsPage : Component<SettingsPageState>
         ConnectionState.Discovering => "Looking for your Mac…",
         _ => "Not paired"
     };
+
+    private async void Done() => await Navigation!.PopAsync();
 
     private void RePair()
     {
@@ -91,8 +136,6 @@ class SettingsPage : Component<SettingsPageState>
         underlyingSender.StopPairing();
         underlyingSender.StartPairing();
     }
-
-    private async void Done() => await Navigation!.PopAsync();
 
     private void ToggleRehearsalMode()
     {

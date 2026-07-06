@@ -1,7 +1,6 @@
 using MauiReactor;
 using MauiReactor.HotReload;
 using StageBuddy.App.Pages;
-using StageBuddy.App.Resources.Styles;
 using StageBuddy.App.Services;
 using StageBuddy.Core.Storage;
 using StageBuddy.Core.Sync;

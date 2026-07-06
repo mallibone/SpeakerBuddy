@@ -39,7 +39,7 @@ class PostTalkSummaryPage : Component<PostTalkSummaryPageState, PostTalkSummaryP
             VStack(
                 Label(Props.TalkTitle)
                     .FontSize(20)
-                    .FontAttributes(FontAttributes.Bold),
+                    .FontFamily("OpenSansSemibold"),
 
                 RenderTotalDelta(),
 
@@ -47,7 +47,11 @@ class PostTalkSummaryPage : Component<PostTalkSummaryPageState, PostTalkSummaryP
                     .ItemsSource(Props.BeatTimings, RenderRow)
                     .VFill(),
 
-                Button("Done").OnClicked(Done).AutomationId("SummaryDoneButton")
+                Button("Done")
+                    .OnClicked(Done)
+                    .ImageSource(Icons.Glyph(Icons.Check, ApplicationTheme.OnAccent, 18))
+                    .HeightRequest(52)
+                    .AutomationId("SummaryDoneButton")
             )
             .Spacing(12)
             .Padding(16)
@@ -57,23 +61,55 @@ class PostTalkSummaryPage : Component<PostTalkSummaryPageState, PostTalkSummaryP
     private VisualNode RenderTotalDelta()
     {
         var delta = TotalActual - TotalPlanned;
-        return Label($"{FormatTime(TotalActual)} actual vs {FormatTime(TotalPlanned)} planned ({FormatDelta(delta)})")
-            .FontAttributes(FontAttributes.Bold)
-            .TextColor(delta > TimeSpan.Zero ? Colors.Red : Colors.Green)
-            .AutomationId("SummaryTotalDelta");
+        var deltaColor = delta > TimeSpan.Zero ? ApplicationTheme.PaceBehind : ApplicationTheme.PaceOnTrack;
+
+        return Border(
+            VStack(
+                Label(delta switch
+                    {
+                        { Ticks: 0 } => "On time",
+                        { Ticks: > 0 } => $"+{FormatTime(delta)} over",
+                        _ => $"-{FormatTime(delta.Negate())} under"
+                    })
+                    .FontSize(28)
+                    .FontFamily("OpenSansSemibold")
+                    .TextColor(deltaColor)
+                    .HCenter()
+                    .AutomationId("SummaryTotalDelta"),
+                Label($"{FormatTime(TotalActual)} actual · {FormatTime(TotalPlanned)} planned")
+                    .TextColor(ApplicationTheme.TextSecondary)
+                    .HCenter()
+            )
+            .Spacing(4)
+        )
+        .BackgroundColor(ApplicationTheme.Card)
+        .Padding(16);
     }
 
     private VisualNode RenderRow(BeatTiming timing)
     {
         var title = Props.Timeline.FirstOrDefault(b => b.Id == timing.BeatId)?.Title ?? timing.BeatId;
         var delta = timing.Actual - timing.Planned;
+        var deltaColor = delta > TimeSpan.Zero ? ApplicationTheme.PaceBehind : ApplicationTheme.PaceOnTrack;
 
-        return VStack(
-            Label(title),
-            Label($"{FormatTime(timing.Actual)} actual vs {FormatTime(timing.Planned)} planned ({FormatDelta(delta)})")
-                .TextColor(delta > TimeSpan.Zero ? Colors.Red : Colors.Green)
+        return Grid("auto", "*,auto",
+            VStack(
+                Label(title)
+                    .FontFamily("OpenSansSemibold"),
+                Label($"{FormatTime(timing.Actual)} actual · {FormatTime(timing.Planned)} planned")
+                    .FontSize(13)
+                    .TextColor(ApplicationTheme.TextSecondary)
+            )
+            .Spacing(2)
+            .GridColumn(0),
+
+            Label(FormatDelta(delta))
+                .FontFamily("OpenSansSemibold")
+                .TextColor(deltaColor)
+                .VCenter()
+                .GridColumn(1)
         )
-        .Padding(0, 8);
+        .Padding(0, 10);
     }
 
     private async void Done() => await Navigation!.PopToRootAsync();

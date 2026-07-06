@@ -167,29 +167,58 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
     private VisualNode RenderLive()
         => VStack(
             RehearsalMode.IsRehearsalMode
-                ? Label("REHEARSAL MODE")
-                    .FontAttributes(FontAttributes.Bold)
-                    .TextColor(Colors.White)
-                    .BackgroundColor(Colors.DarkOrange)
-                    .Padding(8, 4)
-                    .HCenter()
-                    .AutomationId("RehearsalBadge")
+                ? Border(
+                    Label("REHEARSAL MODE")
+                        .FontFamily("OpenSansSemibold")
+                        .FontSize(12)
+                        .CharacterSpacing(1.5)
+                        .TextColor(ApplicationTheme.AmberInk)
+                        .AutomationId("RehearsalBadge")
+                  )
+                  .BackgroundColor(ApplicationTheme.PaceTolerance)
+                  .StrokeThickness(0)
+                  .Padding(12, 5)
+                  .HCenter()
                 : null,
 
             new PacingBar().Snapshot(State.Snapshot!),
+
+            RenderBeatPosition(),
 
             State.Snapshot!.IsFinished
                 ? RenderFinished()
                 : RenderCurrentBeat(),
 
             !State.HasStarted
-                ? Button("Start").OnClicked(StartTalk).HeightRequest(56).AutomationId("LiveStartButton")
+                ? Button("Start")
+                    .OnClicked(StartTalk)
+                    .ImageSource(Icons.Glyph(Icons.Play, ApplicationTheme.OnAccent, 22))
+                    .FontSize(18)
+                    .HeightRequest(56)
+                    .AutomationId("LiveStartButton")
                 : null,
 
-            Button("Back").OnClicked(GoBackAStep).AutomationId("LiveBackButton")
+            Button("Back")
+                .OnClicked(GoBackAStep)
+                .ImageSource(Icons.Glyph(Icons.Back, ApplicationTheme.Accent, 18))
+                .ThemeKey("Secondary")
+                .AutomationId("LiveBackButton")
         )
         .Spacing(16)
         .Padding(16);
+
+    private VisualNode? RenderBeatPosition()
+    {
+        if (State.Snapshot!.IsFinished || State.Talk is null)
+            return null;
+
+        return Label($"BEAT {State.Snapshot.BeatIndex + 1} OF {State.Talk.Timeline.Count}")
+            .FontFamily("OpenSansSemibold")
+            .FontSize(12)
+            .CharacterSpacing(1.5)
+            .TextColor(ApplicationTheme.TextSecondary)
+            .HCenter();
+    }
 
     private VisualNode RenderCurrentBeat()
         => State.Snapshot!.CurrentBeat.Type == BeatType.Demo
@@ -203,11 +232,20 @@ class LiveTalkPage : Component<LiveTalkPageState, LiveTalkPageProps>
                 .OnNext(NextBeat);
 
     private static VisualNode RenderFinished()
-        => Label("Talk finished!")
-            .FontSize(24)
-            .HCenter()
-            .VCenter()
-            .AutomationId("LiveFinishedLabel");
+        => VStack(
+            Label(Icons.Check)
+                .FontFamily(Icons.FontFamily)
+                .FontSize(44)
+                .TextColor(ApplicationTheme.PaceOnTrack)
+                .HCenter(),
+            Label("Talk finished!")
+                .FontSize(24)
+                .FontFamily("OpenSansSemibold")
+                .HCenter()
+                .AutomationId("LiveFinishedLabel")
+        )
+        .Spacing(10)
+        .VCenter();
 
     private void StartTalk()
     {

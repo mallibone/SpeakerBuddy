@@ -88,39 +88,63 @@ class HelperHomePage : Component<HelperHomePageState>
         .Title("Stage Buddy Helper");
 
     private VisualNode RenderStatus()
-        => Label(State.Connection == ConnectionState.Connected
-                ? "Connected to iPhone"
-                : "Waiting for Stage Buddy…")
-            .TextColor(State.Connection == ConnectionState.Connected ? Colors.Green : Colors.Gray)
-            .FontSize(20);
+        => HStack(
+            BoxView()
+                .WidthRequest(12)
+                .HeightRequest(12)
+                .CornerRadius(6)
+                .BackgroundColor(State.Connection == ConnectionState.Connected
+                    ? ApplicationTheme.ConnectedGreen
+                    : ApplicationTheme.TextSecondary)
+                .VCenter(),
+            Label(State.Connection == ConnectionState.Connected
+                    ? "Connected to iPhone"
+                    : "Waiting for Stage Buddy…")
+                .TextColor(State.Connection == ConnectionState.Connected
+                    ? ApplicationTheme.TextPrimary
+                    : ApplicationTheme.TextSecondary)
+                .FontSize(20)
+                .FontFamily("OpenSansSemibold")
+                .VCenter()
+        )
+        .Spacing(10);
 
     private VisualNode RenderLastSnippet()
         => State.LastReceivedAt is null
             ? Label("No snippets received yet")
-                .TextColor(Colors.Gray)
-            : VStack(
-                Label($"Last received {State.LastReceivedAt:T}")
-                    .TextColor(Colors.Gray)
-                    .FontSize(12),
-                Label(State.LastSnippetPreview ?? string.Empty)
-                    .FontFamily("Courier")
-                    .LineBreakMode(LineBreakMode.TailTruncation)
-                    .MaxLines(3)
-            );
+                .TextColor(ApplicationTheme.TextSecondary)
+            : Border(
+                VStack(
+                    Label($"Last received {State.LastReceivedAt:T}")
+                        .TextColor(ApplicationTheme.TextSecondary)
+                        .FontSize(12),
+                    Label(State.LastSnippetPreview ?? string.Empty)
+                        .FontFamily("Courier")
+                        .TextColor(ApplicationTheme.CodeForeground)
+                        .LineBreakMode(LineBreakMode.TailTruncation)
+                        .MaxLines(3)
+                )
+                .Spacing(6)
+            )
+            .BackgroundColor(ApplicationTheme.CodeBackground)
+            .Padding(14);
 
     private VisualNode RenderPairingConfirmation(PairingRequest request)
-        => VStack(
-            Label($"Pair with \"{request.PeerDisplayName}\"?")
-                .FontAttributes(FontAttributes.Bold),
-            HStack(
-                Button("Accept").OnClicked(() => RespondToPairing(request, true)),
-                Button("Decline").OnClicked(() => RespondToPairing(request, false))
+        => Border(
+            VStack(
+                Label($"Pair with \"{request.PeerDisplayName}\"?")
+                    .FontFamily("OpenSansSemibold"),
+                HStack(
+                    Button("Accept").OnClicked(() => RespondToPairing(request, true)),
+                    Button("Decline").OnClicked(() => RespondToPairing(request, false)).ThemeKey("Secondary")
+                )
+                .Spacing(12)
             )
-            .Spacing(12)
+            .Spacing(10)
         )
-        .Spacing(8)
-        .Padding(12)
-        .BackgroundColor(Colors.LightYellow);
+        .BackgroundColor(ApplicationTheme.Card)
+        .Stroke(ApplicationTheme.Accent)
+        .Padding(14);
 
     private void RespondToPairing(PairingRequest request, bool accepted)
     {

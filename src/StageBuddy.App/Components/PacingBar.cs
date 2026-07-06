@@ -12,25 +12,34 @@ partial class PacingBar : Component
         if (_snapshot is null)
             return VStack();
 
-        var color = _snapshot.Pace switch
+        var paceColor = _snapshot.Pace switch
         {
-            PaceStatus.OnPaceOrAhead => Colors.Green,
-            PaceStatus.WithinTolerance => Colors.Orange,
-            _ => Colors.Red
+            PaceStatus.OnPaceOrAhead => ApplicationTheme.PaceOnTrack,
+            PaceStatus.WithinTolerance => ApplicationTheme.PaceTolerance,
+            _ => ApplicationTheme.PaceBehind
         };
 
         return VStack(
             ProgressBar()
                 .Progress(_snapshot.OverallProgress)
-                .ProgressColor(color),
+                .ProgressColor(paceColor)
+                .ScaleY(2.5),
 
-            HStack(
-                Label($"Elapsed {FormatTime(_snapshot.Elapsed)}"),
+            // Grid, not HStack: HStack has no per-child expansion, so nothing can push
+            // the remaining-time label to the trailing edge.
+            Grid("auto", "*,*",
+                Label($"Elapsed {FormatTime(_snapshot.Elapsed)}")
+                    .FontFamily("OpenSansSemibold")
+                    .TextColor(ApplicationTheme.TextSecondary)
+                    .GridColumn(0),
                 Label($"Remaining {FormatTime(_snapshot.Remaining)}")
+                    .FontFamily("OpenSansSemibold")
+                    .TextColor(paceColor)
+                    .HorizontalTextAlignment(TextAlignment.End)
+                    .GridColumn(1)
             )
-            .Spacing(24)
         )
-        .Spacing(4);
+        .Spacing(10);
     }
 
     private static string FormatTime(TimeSpan span) => span.ToString(@"mm\:ss");

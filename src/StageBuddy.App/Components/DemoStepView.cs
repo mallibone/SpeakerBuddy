@@ -48,23 +48,30 @@ partial class DemoStepView : Component<DemoStepViewState>
                 .FontSize(18),
 
             _step.Snippet is not null
-                ? Label(_step.Snippet)
-                    .FontFamily("Courier")
-                    .TextColor(Colors.White)
-                    .BackgroundColor(Colors.Black)
-                    .Padding(12)
-                    .AutomationId("DemoSnippetLabel")
+                ? RenderSnippetCard(_step.Snippet, _step.Language)
                 : null,
 
             Button("Copy")
                 .OnClicked(() => _onCopy?.Invoke())
+                .ImageSource(Icons.Glyph(Icons.Copy, ApplicationTheme.OnAccent, 24))
+                .FontSize(20)
                 .HeightRequest(72)
                 .AutomationId("DemoCopyButton"),
 
             _copyFailed
-                ? Label("Copy failed — try again")
-                    .TextColor(Colors.Red)
-                    .AutomationId("DemoCopyFailedLabel")
+                ? HStack(
+                    Label(Icons.Warning)
+                        .FontFamily(Icons.FontFamily)
+                        .FontSize(16)
+                        .TextColor(ApplicationTheme.PaceBehind)
+                        .VCenter(),
+                    Label("Copy failed — try again")
+                        .TextColor(ApplicationTheme.PaceBehind)
+                        .VCenter()
+                        .AutomationId("DemoCopyFailedLabel")
+                  )
+                  .Spacing(6)
+                  .HCenter()
                 : null,
 
             _step.FallbackNote is not null
@@ -80,12 +87,36 @@ partial class DemoStepView : Component<DemoStepViewState>
         .Spacing(12);
     }
 
+    private static VisualNode RenderSnippetCard(string snippet, string? language)
+        => Border(
+            VStack(
+                language is not null
+                    ? Label(language.ToUpperInvariant())
+                        .FontSize(11)
+                        .FontFamily("OpenSansSemibold")
+                        .TextColor(ApplicationTheme.Amber300)
+                        .CharacterSpacing(1.5)
+                    : null,
+
+                Label(snippet)
+                    .FontFamily("Courier")
+                    .FontSize(15)
+                    .TextColor(ApplicationTheme.CodeForeground)
+                    .AutomationId("DemoSnippetLabel")
+            )
+            .Spacing(8)
+        )
+        .BackgroundColor(ApplicationTheme.CodeBackground)
+        .Padding(14);
+
     private VisualNode? RenderQrToggle()
     {
         if (_isSenderConnected)
         {
             return Button(State.ShowQrManually ? "Hide QR code" : "Show QR code")
                 .OnClicked(() => SetState(s => s.ShowQrManually = !s.ShowQrManually))
+                .ImageSource(Icons.Glyph(Icons.Qr, ApplicationTheme.Accent, 18))
+                .ThemeKey("Secondary")
                 .AutomationId("DemoQrToggleButton");
         }
 
@@ -97,13 +128,20 @@ partial class DemoStepView : Component<DemoStepViewState>
         return VStack(
             Button(State.ShowFallback ? "Hide fallback note" : "If the demo breaks…")
                 .OnClicked(() => SetState(s => s.ShowFallback = !s.ShowFallback))
+                .ImageSource(Icons.Glyph(Icons.Warning, ApplicationTheme.Accent, 18))
+                .ThemeKey("Secondary")
                 .AutomationId("DemoFallbackToggleButton"),
 
             State.ShowFallback
-                ? Label(fallbackNote)
-                    .FontAttributes(FontAttributes.Italic)
-                    .AutomationId("DemoFallbackNoteLabel")
+                ? Border(
+                    Label(fallbackNote)
+                        .FontAttributes(FontAttributes.Italic)
+                        .AutomationId("DemoFallbackNoteLabel")
+                  )
+                  .BackgroundColor(ApplicationTheme.Card)
+                  .Padding(12)
                 : null
-        );
+        )
+        .Spacing(8);
     }
 }
