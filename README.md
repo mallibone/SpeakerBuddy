@@ -72,3 +72,7 @@ STAGEBUDDY_E2E=1 dotnet test tests/StageBuddy.App.EndToEndTests
 This is a personal project, built almost entirely with [Claude Code](https://claude.com/claude-code) — including its own test tooling and the design pass. The development process is part of the repo: `stage-buddy-spec.md` (what to build), `plan.md` (how to build it), and `progress.md` (what actually happened, including the bugs the e2e suite caught) are the working artifacts, kept honest commit by commit.
 
 Icons are from [Fluent UI System Icons](https://github.com/microsoft/fluentui-system-icons) (MIT).
+
+## License
+
+[LGPL-3.0](LICENSE): use it however you like, including inside closed-source software — but this code, and any modifications you make to it, stay open under the same license.
