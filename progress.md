@@ -20,13 +20,15 @@ Deploy to the physical iPad: build signed (`-p:RuntimeIdentifier=ios-arm64 -p:Co
 - Item 2 (pairing → Connected): PASS — reaches Connected/green after the state-machine fix. (Explicit first-time Accept-dialog for the iPad not cleanly isolated; auto-reconnect via stored token took over.)
 - Item 3 (known-peer reconnect, no dialog, fast): PASS — helper restarted 3× this session, iPad reconnected each time with no dialog.
 - Item 4 (Copy → exact snippet, multi-line/tabs): **PASS — verified byte-for-byte on the macOS pasteboard** (`builder.Services.AddMcpServer()\n\t.WithStdioServerTransport();`).
-- Items 5–10 (rapid-fire ×5, App Nap after 10min hidden, iPad backgrounding + KeepScreenOn, Mac sleep/wake, AWDL-no-network / Wi-Fi-off, Re-pair dialog): NOT YET RUN.
+- Item 5 (rapid fire, `.Reliable`, none dropped): **PASS — 38 rapid Copy taps → 38 pasteboard writes** (NSPasteboard `changeCount` 807→845, read via `swift -e`), pasteboard held the last-copied step's snippet. Verification method: changeCount delta counts arrivals even when snippet content repeats.
+- Items 6–10 (App Nap after 10min hidden, iPad backgrounding + KeepScreenOn, Mac sleep/wake, AWDL-no-network / Wi-Fi-off, Re-pair dialog): NOT YET RUN.
+- Test asset: `tests/DeviceTestData/m2-checklist.json` talk seeded onto the iPad via `devicectl device copy to` — beat 1 has 5 numbered rapid-fire snippets (last has tab + unicode), beat 2 has one uniquely named marker snippet per item 6–10 so each remaining verification writes an unmistakable pasteboard value.
 
 ## In progress
-- M2 device checklist items 5–10 (see task #7).
+- M2 device checklist items 6–10.
 
 ## Next
-- Finish M2 checklist items 5–10 with the user (iPad taps + physical actions; I verify Mac-side).
+- Finish M2 checklist items 6–10 with the user (iPad taps + physical actions; I verify Mac-side).
 - Recommended (not blocking): one human camera-scan of the QR fallback (still never scanned with a real camera).
 
 ## Blockers / decisions needed

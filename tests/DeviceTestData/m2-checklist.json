@@ -1,0 +1,84 @@
+{
+  "session": {
+    "title": "M2 Device Checklist",
+    "plannedDurationMinutes": 30
+  },
+  "timeline": [
+    {
+      "id": "beat-rapid",
+      "type": "demo",
+      "title": "Item 5 — rapid fire",
+      "plannedDurationMinutes": 5,
+      "steps": [
+        {
+          "id": "rapid-1",
+          "note": "Copy, then Next, fast as you can",
+          "snippet": "RAPID 1/5",
+          "language": "text"
+        },
+        {
+          "id": "rapid-2",
+          "note": "Copy, Next",
+          "snippet": "RAPID 2/5",
+          "language": "text"
+        },
+        {
+          "id": "rapid-3",
+          "note": "Copy, Next",
+          "snippet": "RAPID 3/5",
+          "language": "text"
+        },
+        {
+          "id": "rapid-4",
+          "note": "Copy, Next",
+          "snippet": "RAPID 4/5",
+          "language": "text"
+        },
+        {
+          "id": "rapid-5",
+          "note": "Last one — pasteboard must end up holding this, tabs and unicode intact",
+          "snippet": "RAPID 5/5 — final\n\tindented with a real tab\n\tnaïve café ünïcode 🚀",
+          "language": "text"
+        }
+      ]
+    },
+    {
+      "id": "beat-longhaul",
+      "type": "demo",
+      "title": "Items 6-10 — one marker snippet each",
+      "plannedDurationMinutes": 25,
+      "steps": [
+        {
+          "id": "item-6",
+          "note": "Item 6: helper hidden 10+ min behind full-screen app, then Copy",
+          "snippet": "ITEM 6 — App Nap survived",
+          "language": "text"
+        },
+        {
+          "id": "item-7",
+          "note": "Item 7: background the iPad 30 s, return, then Copy",
+          "snippet": "ITEM 7 — back from background",
+          "language": "text"
+        },
+        {
+          "id": "item-8",
+          "note": "Item 8: Mac sleep + wake, then Copy",
+          "snippet": "ITEM 8 — after Mac sleep/wake",
+          "language": "text"
+        },
+        {
+          "id": "item-9",
+          "note": "Item 9: both on Wi-Fi but no network (AWDL), then Copy",
+          "snippet": "ITEM 9 — over AWDL",
+          "language": "text"
+        },
+        {
+          "id": "item-10",
+          "note": "Item 10: after Re-pair in Settings and fresh Accept, Copy",
+          "snippet": "ITEM 10 — re-paired",
+          "language": "text"
+        }
+      ]
+    }
+  ]
+}
