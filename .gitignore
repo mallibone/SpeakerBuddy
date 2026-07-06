@@ -3,8 +3,9 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
-# Claude Code local tooling state
-.claude/
+# Claude Code local tooling state (but project skills are shared)
+.claude/*
+!.claude/skills/
 
 # dotenv files
 .env

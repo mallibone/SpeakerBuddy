@@ -1,4 +1,4 @@
-# Progress — updated 2026-07-06 (M1/M3 complete; e2e sim suite + UI polish landed; M2 device checklist still open)
+# Progress — updated 2026-07-06 (M1/M3 complete; M2 device checklist closed: 1–5 PASS, 6–10 waived by user)
 
 ## Done
 - **M1 local core (2026-07-03)** — models, source-gen serialization, validator, importer, file repositories, clock-injected `LiveTalkEngine`/`PaceCalculator`, iOS app head (library/import/live/settings). All verified live on the iOS simulator; engine/validator/repo behavior unit-tested. See git history `77b2ae9..e809dcd`.
@@ -21,15 +21,15 @@ Deploy to the physical iPad: build signed (`-p:RuntimeIdentifier=ios-arm64 -p:Co
 - Item 3 (known-peer reconnect, no dialog, fast): PASS — helper restarted 3× this session, iPad reconnected each time with no dialog.
 - Item 4 (Copy → exact snippet, multi-line/tabs): **PASS — verified byte-for-byte on the macOS pasteboard** (`builder.Services.AddMcpServer()\n\t.WithStdioServerTransport();`).
 - Item 5 (rapid fire, `.Reliable`, none dropped): **PASS — 38 rapid Copy taps → 38 pasteboard writes** (NSPasteboard `changeCount` 807→845, read via `swift -e`), pasteboard held the last-copied step's snippet. Verification method: changeCount delta counts arrivals even when snippet content repeats.
-- Items 6–10 (App Nap after 10min hidden, iPad backgrounding + KeepScreenOn, Mac sleep/wake, AWDL-no-network / Wi-Fi-off, Re-pair dialog): NOT YET RUN.
+- Items 6–10 (App Nap after 10min hidden, iPad backgrounding + KeepScreenOn, Mac sleep/wake, AWDL-no-network / Wi-Fi-off, Re-pair dialog): **WAIVED by the user 2026-07-06** ("good enough … not needed for what I want"). The user performed the physical actions informally but never tapped Copy after each, so no Mac-side proof exists (pasteboard changeCount stayed frozen at 845 throughout). Note: the link DID show Connected after all the churn (backgrounding/sleep/Wi-Fi toggling), which is weak positive signal for 7–9. If these ever matter (e.g. before a real conference talk), re-run them with the marker snippets in `tests/DeviceTestData/m2-checklist.json` — that talk was built for exactly this.
 - Test asset: `tests/DeviceTestData/m2-checklist.json` talk seeded onto the iPad via `devicectl device copy to` — beat 1 has 5 numbered rapid-fire snippets (last has tab + unicode), beat 2 has one uniquely named marker snippet per item 6–10 so each remaining verification writes an unmistakable pasteboard value.
 
 ## In progress
-- M2 device checklist items 6–10.
+- (nothing)
 
 ## Next
-- Finish M2 checklist items 6–10 with the user (iPad taps + physical actions; I verify Mac-side).
-- Recommended (not blocking): one human camera-scan of the QR fallback (still never scanned with a real camera).
+- Recommended before a real on-stage use (not blocking): M2 items 6–10 re-run properly, plus one human camera-scan of the QR fallback (still never scanned with a real camera).
+- New: `.claude/skills/prep-talk/SKILL.md` — project skill that turns an outline into valid talk JSON (schema + validator rules + placeholder syntax encoded). Keep it in sync with `TalkValidator`/`PlaceholderEngine` if those change.
 
 ## Blockers / decisions needed
 - (none)
