@@ -20,9 +20,9 @@ The fixture builds the app, boots a simulator if none is running, quits a runnin
 
 1. **Package version** in `Directory.Packages.props` (repo uses Central Package Management):
    ```xml
-   <PackageVersion Include="Microsoft.Maui.DevFlow.Agent" Version="0.1.0-preview.11.26317.2" />
+   <PackageVersion Include="Microsoft.Maui.DevFlow.Agent" Version="0.1.0-preview.14.26567.2" />
    ```
-   - GOTCHA: this version requires `Microsoft.Maui.Controls >= 10.0.20`. The repo was pinned to `10.0.10` and had to be bumped — a solution-wide CPM change. After bumping, verify: `dotnet build StageBuddy.slnx` (0 errors) and `dotnet test tests/StageBuddy.Core.Tests` (91 tests passing).
+   - GOTCHA: the agent requires `Microsoft.Maui.Controls >= 10.0.20` (the repo is on 11.0.10 since the .NET 11 migration). It only ships net10 builds, which the net11 heads consume. After bumping, verify: `dotnet build StageBuddy.slnx` (0 errors) and `dotnet test tests/StageBuddy.Core.Tests` (91 tests passing).
 2. **Reference** in `src/StageBuddy.MacHelper/StageBuddy.MacHelper.csproj`, inside the existing Debug-only ItemGroup (alongside `Reactor.Maui.HotReload`) so it never ships in Release:
    ```xml
    <ItemGroup Condition="'$(Configuration)'=='Debug'">
@@ -43,10 +43,10 @@ The fixture builds the app, boots a simulator if none is running, quits a runnin
 
 ```bash
 # Step 1: build only — confirm "Build succeeded", 0 errors
-dotnet build src/StageBuddy.MacHelper -f net10.0-maccatalyst
+dotnet build src/StageBuddy.MacHelper -f net11.0-maccatalyst
 
 # Step 2: launch separately
-open -a "/Users/mallibone/Work/Playground/StageBuddy/src/StageBuddy.MacHelper/bin/Debug/net10.0-maccatalyst/maccatalyst-arm64/Stage Buddy Helper.app"
+open -a "/Users/mallibone/Work/Playground/StageBuddy/src/StageBuddy.MacHelper/bin/Debug/net11.0-maccatalyst/maccatalyst-arm64/Stage Buddy Helper.app"
 ```
 
 Same issue applies to iOS. For **physical iOS devices**, skip `-t:Run`/mlaunch entirely (mlaunch failed to see the physical iPad over classic USB pairing even when trusted); use devicectl after a plain build:

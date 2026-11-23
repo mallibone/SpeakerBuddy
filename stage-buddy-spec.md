@@ -8,7 +8,7 @@ Stage Buddy is an iOS/iPadOS companion app for delivering live conference talks.
 
 ## 2. Platform & Stack
 
-- **.NET 10**
+- **.NET 11**
 - **.NET MAUI**
 - **MauiReactor** (functional/component-based MVU UI framework over MAUI — no XAML)
 - **Targets**:

@@ -10,15 +10,15 @@ Build **Stage Buddy**: an iOS/iPadOS companion app for delivering live conferenc
 
 **Hard constraints (from spec — do not deviate without escalation, §7):**
 
-- .NET 10, .NET MAUI, **MauiReactor** (MVU component framework — **no XAML anywhere**).
-- Targets: `net10.0-ios` (main app), `net10.0-maccatalyst` (helper app). Same solution. No Android/Windows.
+- .NET 11, .NET MAUI, **MauiReactor** (MVU component framework — **no XAML anywhere**).
+- Targets: `net11.0-ios` (main app), `net11.0-maccatalyst` (helper app). Same solution. No Android/Windows.
 - Fully local data. No cloud, no backend, no runtime API dependencies.
 - MultipeerConnectivity via the built-in `Microsoft.iOS`/`Microsoft.MacCatalyst` bindings (namespace `MultipeerConnectivity` is already exposed — **no custom binding project**).
 - Talk content is authored externally (Markdown → JSON via AI) and imported by pasting JSON. **No in-app content editing.**
 - Git from the start: sensible .NET .gitignore, frequent commits, professional commit messages (see §9).
 - Build order: **M1 local core → M2 P2P sync → M3 resilience & polish** (spec §9). Do not start M2 before M1's definition of done is met.
 
-**Verified environment (2026-07-02):** .NET SDK 10.0.301; `maui` + `macos` workloads installed; Xcode 26.5 (build 17F42). macOS host.
+**Verified environment (2026-07-02, migrated 2026-11-23):** .NET SDK 11.0.100 (pinned in `global.json`); `maui` workload 11.0.100; Xcode 27.2 (required by the net11 iOS/Mac Catalyst SDK 27.2). macOS host.
 
 ---
 
@@ -28,7 +28,7 @@ Four source projects + one test project. Two separate app heads — do **not** m
 
 ```
 StageBuddy/
-├── StageBuddy.slnx                    # .NET 10 XML solution format
+├── StageBuddy.slnx                    # .NET 11 XML solution format
 ├── Directory.Build.props              # net-wide: Nullable, ImplicitUsings, LangVersion latest
 ├── Directory.Packages.props           # Central Package Management (CPM)
 ├── .gitignore                         # from `dotnet new gitignore`
@@ -36,12 +36,12 @@ StageBuddy/
 ├── plan.md                            # (this file)
 ├── progress.md                        # execution state — maintain per §8
 ├── src/
-│   ├── StageBuddy.Core/               # TFM net10.0 — ZERO MAUI/platform refs. All logic lives here.
-│   ├── StageBuddy.Sync.Multipeer/     # TFMs net10.0-ios;net10.0-maccatalyst — MC implementation. No MAUI ref.
-│   ├── StageBuddy.App/                # MAUI + MauiReactor head, net10.0-ios
-│   └── StageBuddy.MacHelper/          # MAUI + MauiReactor head, net10.0-maccatalyst ONLY
+│   ├── StageBuddy.Core/               # TFM net11.0 — ZERO MAUI/platform refs. All logic lives here.
+│   ├── StageBuddy.Sync.Multipeer/     # TFMs net11.0-ios;net11.0-maccatalyst — MC implementation. No MAUI ref.
+│   ├── StageBuddy.App/                # MAUI + MauiReactor head, net11.0-ios
+│   └── StageBuddy.MacHelper/          # MAUI + MauiReactor head, net11.0-maccatalyst ONLY
 └── tests/
-    └── StageBuddy.Core.Tests/         # TFM net10.0, xUnit v3
+    └── StageBuddy.Core.Tests/         # TFM net11.0, xUnit v3
 ```
 
 **Dependency graph:** `App → Core + Sync.Multipeer` · `MacHelper → Core + Sync.Multipeer` · `Sync.Multipeer → Core` · `Tests → Core` (only Core — the test project must restore and run on any host with plain `dotnet test`, no Xcode, no simulators).
@@ -81,7 +81,7 @@ Every file below states *why it exists*, *what pattern to follow*, and *what to 
 | `Directory.Build.props` | `<Nullable>enable</Nullable>`, `<ImplicitUsings>enable</ImplicitUsings>`, `<LangVersion>latest</LangVersion>`, `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`. One place, all projects. |
 | `Directory.Packages.props` | `<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>` + `<PackageVersion>` entries. Avoid: version attributes in csproj files. |
 | `.gitignore` | Generate with `dotnet new gitignore`. |
-| `StageBuddy.slnx` | Create via `dotnet new sln --format slnx` (or `dotnet sln add` produces it on .NET 10 when named .slnx). |
+| `StageBuddy.slnx` | Create via `dotnet new sln --format slnx` (or `dotnet sln add` produces it on .NET 11 when named .slnx). |
 
 ### 3.2 `src/StageBuddy.Core/` — all logic, zero platform dependencies
 
@@ -244,7 +244,7 @@ Backoff: 1 s, 2 s, 4 s, capped at 5 s, **retry forever until explicit Stop** (th
 
 ### 3.3 `src/StageBuddy.Sync.Multipeer/` — MultipeerConnectivity implementation (M2)
 
-Multi-targets `net10.0-ios;net10.0-maccatalyst`. References Core only. **This is the most pitfall-dense code in the project — read §7 escalation criteria before starting it.** All classes from namespace `MultipeerConnectivity` in the platform bindings.
+Multi-targets `net11.0-ios;net11.0-maccatalyst`. References Core only. **This is the most pitfall-dense code in the project — read §7 escalation criteria before starting it.** All classes from namespace `MultipeerConnectivity` in the platform bindings.
 
 | File | Content & rationale |
 |---|---|
@@ -310,7 +310,7 @@ xUnit v3, references Core only. One test class per Core area. Required coverage:
 | `SyncEnvelopeTests` (M2) | Round-trip; unknown `type` tolerated; `v` mismatch surfaces detectably. |
 | `PlaceholderEngineTests` (M3) | Detection order/distinctness; multi-occurrence substitution; unknown left intact; `{{date}}` via FakeTimeProvider; malformed braces never throw; special chars in values. |
 
-Framework rationale: xUnit v3 has first-class .NET 10/Microsoft.Testing.Platform support and is the ecosystem default; TUnit is younger (novelty risk), MSTest adds nothing here.
+Framework rationale: xUnit v3 has first-class .NET 11/Microsoft.Testing.Platform support and is the ecosystem default; TUnit is younger (novelty risk), MSTest adds nothing here.
 
 ---
 
@@ -388,17 +388,17 @@ Execute strictly in order within a milestone; tasks marked ∥ may run in parall
 ```bash
 dotnet build StageBuddy.slnx                                  # gate for every task
 dotnet test tests/StageBuddy.Core.Tests                       # gate for every task (host-side, no Xcode)
-dotnet build src/StageBuddy.App -f net10.0-ios                # compile gate for platform code
-dotnet build src/StageBuddy.MacHelper -f net10.0-maccatalyst  # compile gate for platform code
+dotnet build src/StageBuddy.App -f net11.0-ios                # compile gate for platform code
+dotnet build src/StageBuddy.MacHelper -f net11.0-maccatalyst  # compile gate for platform code
 # Run on iOS simulator (M1 verification):
-dotnet build src/StageBuddy.App -f net10.0-ios -t:Run
+dotnet build src/StageBuddy.App -f net11.0-ios -t:Run
 # Run Mac helper locally (M2):
-dotnet build src/StageBuddy.MacHelper -f net10.0-maccatalyst -t:Run
+dotnet build src/StageBuddy.MacHelper -f net11.0-maccatalyst -t:Run
 ```
 
-Device deploy (M2, user-assisted): iPhone needs Developer Mode on; easiest path is letting Xcode create an automatic dev provisioning profile for `com.mallibone.stagebuddy` once, then `dotnet build -t:Run -f net10.0-ios -p:RuntimeIdentifier=ios-arm64 -p:CodesignKey="Apple Development"`. MC needs no special App ID capability.
+Device deploy (M2, user-assisted): iPhone needs Developer Mode on; easiest path is letting Xcode create an automatic dev provisioning profile for `com.mallibone.stagebuddy` once, then `dotnet build -t:Run -f net11.0-ios -p:RuntimeIdentifier=ios-arm64 -p:CodesignKey="Apple Development"`. MC needs no special App ID capability.
 
-Optional dev-loop improvement: `dotnet tool install -g Reactor.Maui.HotReload`, then `dotnet-maui-reactor -f net10.0-ios` alongside the app for MauiReactor hot reload.
+Optional dev-loop improvement: `dotnet tool install -g Reactor.Maui.HotReload`, then `dotnet-maui-reactor -f net11.0-ios` alongside the app for MauiReactor hot reload.
 
 ---
 

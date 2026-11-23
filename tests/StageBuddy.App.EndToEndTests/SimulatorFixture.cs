@@ -30,7 +30,7 @@ public sealed class SimulatorFixture : IAsyncLifetime
 
         // Build-only, never -t:Run (see docs/devflow-playbook.md); explicit install happens per test.
         Cli.RunChecked(
-            "dotnet", ["build", "src/StageBuddy.App", "-f", "net10.0-ios"],
+            "dotnet", ["build", "src/StageBuddy.App", "-f", "net11.0-ios"],
             workingDirectory: RepoRoot, timeout: TimeSpan.FromMinutes(10));
 
         _appBundlePath = FindAppBundle();
@@ -93,7 +93,7 @@ public sealed class SimulatorFixture : IAsyncLifetime
 
     private string FindAppBundle()
     {
-        var binRoot = Path.Combine(RepoRoot, "src", "StageBuddy.App", "bin", "Debug", "net10.0-ios", "iossimulator-arm64");
+        var binRoot = Path.Combine(RepoRoot, "src", "StageBuddy.App", "bin", "Debug", "net11.0-ios", "iossimulator-arm64");
         var bundle = Directory.Exists(binRoot)
             ? Directory.EnumerateDirectories(binRoot, "*.app").FirstOrDefault()
             : null;

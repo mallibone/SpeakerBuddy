@@ -50,13 +50,13 @@ Rules the importer enforces: ids globally unique (beats and steps share one name
 
 ## Building
 
-Requirements: macOS with Xcode, .NET 10 SDK with the MAUI workload.
+Requirements: macOS with Xcode 27.2, .NET 11 SDK (pinned in `global.json`) with the MAUI workload.
 
 ```bash
 dotnet build StageBuddy.slnx                                  # everything
 dotnet test tests/StageBuddy.Core.Tests                       # core logic tests
-dotnet build src/StageBuddy.App -f net10.0-ios                # iOS app
-dotnet build src/StageBuddy.MacHelper -f net10.0-maccatalyst  # Mac helper
+dotnet build src/StageBuddy.App -f net11.0-ios                # iOS app
+dotnet build src/StageBuddy.MacHelper -f net11.0-maccatalyst  # Mac helper
 ```
 
 Run the helper by opening the built `.app` bundle; run the iOS app on a simulator or deploy to a device with `xcrun devicectl device install app` + `process launch` after a signed build (`-p:RuntimeIdentifier=ios-arm64 -p:CodesignKey="Apple Development"`). MultipeerConnectivity needs **real hardware** on the iOS side — simulators have no AWDL.
