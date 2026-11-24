@@ -1,11 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks>net11.0-ios;net11.0-maccatalyst</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">17.0</SupportedOSPlatformVersion>
+    <!-- CA1422: Apple marked MultipeerConnectivity obsolete in iOS/Mac Catalyst 27 ("Use Network Framework instead").
+         It is deprecated, not removed, and still works; this project is the MC implementation by design.
+         Remove this once sync moves to Network.framework. -->
+    <NoWarn>$(NoWarn);CA1422</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
